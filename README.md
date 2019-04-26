@@ -1,3 +1,8 @@
+[![Build Status](https://travis-ci.com/rehbergT/dgemm.svg?branch=master)](https://travis-ci.com/rehbergT/dgemm)
+### *This readme is still work progress. However, code and branches are complete*
+
+
+
 # Writing R and Python Packages with Multithreaded C++ Code using BLAS, AVX2/AVX512, OpenMP, C++11 Threads and Cuda GPU acceleration
 
 This tutorial shows step-by-step how to create an R or Python package
@@ -48,9 +53,6 @@ use/link optimized BLAS libraries.
 6. [**Multithreading with C++:**](#head6) Another way to execute the matrix multiplication in parallel is to use the mutlithreading functions indroduced in the C++11 standard. While this approach is more difficult to implement, it is more plattform independent since `OpenMP` is by default not available in the clang compiler on macOS.
 
 7. [**GPU Cuda:**](#head7) naive for-loop matrix multiplication in CUDA (in single and double precision) and using cuBLAS
-
-# **This readme is still work progress. However, the code/branches are already finished**
-
 
 
 ## <a name="head0"></a> **0. Installation of R/Python and BLAS Integration**
