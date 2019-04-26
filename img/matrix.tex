@@ -1,0 +1,78 @@
+\documentclass[10pt,a4paper]{article}%{scrartcl}
+    \newtheorem{defi}{Definition}[section]
+    \usepackage[inner=1.0cm,outer=1.0cm,top=0cm,bottom=1cm,includeheadfoot]{geometry}
+    \usepackage[utf8]{inputenc}
+    \usepackage[english]{babel}
+    \usepackage{xcolor}
+    \usepackage[pdftex]{graphicx}
+    \usepackage[colorlinks,linkcolor=black,citecolor=black]{hyperref}
+    \usepackage[numbers]{natbib}
+    \usepackage{tabularx}
+    \usepackage{amsmath}
+    \usepackage{amssymb}
+    \usepackage{mathtools}
+    \usepackage{txfonts}
+    \usepackage{placeins}
+    \usepackage[skip=0pt]{caption}
+    \usepackage{multicol}
+
+    \newlength\tindent
+    \setlength{\tindent}{\parindent}
+    \setlength{\parindent}{0pt}
+    \renewcommand{\indent}{\hspace*{\tindent}}
+
+\begin{document}
+
+
+\section{Col/Row major}
+\begin{align*}
+\underbrace{\bordermatrix{
+		i\ \text{\textbackslash} \ j
+		& 0 &  1 & 2 & 3      \cr
+		0 & 0  & 1  & 2  & 3  \cr
+		1 & 4  & 5  & 6  & 7  \cr
+		2 & 8  & 9  & 10 & 11 \cr
+		3 & 12 & 13 & 14 & 15 \cr
+		4 & 16 & 17 & 18 & 19 \cr
+}}_{\textstyle\begin{array}{c}\text{row-major order}
+\end{array}}
+\qquad\quad
+\underbrace{\bordermatrix{
+		i\ \text{\textbackslash} \ j
+		& 0 & 1 & 2 & 3     \cr
+		0 & 0 & 5 & 10 & 15 \cr
+		1 & 1 & 6 & 11 & 16 \cr
+		2 & 2 & 7 & 12 & 17 \cr
+		3 & 3 & 8 & 13 & 18 \cr
+		4 & 4 & 9 & 14 & 19 \cr
+}}_{\textstyle\begin{array}{c}\text{column-major order}
+	\end{array}}
+\end{align*}
+
+\section{Cache aware data storage}
+\begin{align*}
+\boldsymbol{C}= &\boldsymbol{A} \times  \boldsymbol{B} \\
+= & \quad\underbrace{\bordermatrix{
+		i\ \text{\textbackslash} \ j
+		& 0 &  1 & 2 & 3      \cr
+		0 & 0  & 1  & 2  & 3  \cr
+		1 & 4  & 5  & 6  & 7  \cr
+		2 & 8  & 9  & 10 & 11 \cr
+		3 & 12 & 13 & 14 & 15 \cr
+		4 & 16 & 17 & 18 & 19 \cr
+}}_{\textstyle\begin{array}{c}\text{matrix A row-major}
+	\end{array}}
+\quad \times\quad
+\underbrace{\bordermatrix{
+		i\ \text{\textbackslash} \ j
+		& 0 & 1 & 2 & 3     \cr
+		0 & 0 & 5 & 10 & 15 \cr
+		1 & 1 & 6 & 11 & 16 \cr
+		2 & 2 & 7 & 12 & 17 \cr
+		3 & 3 & 8 & 13 & 18 \cr
+		4 & 4 & 9 & 14 & 19 \cr
+}}_{\textstyle\begin{array}{c}\text{matrix B column-major}
+	\end{array}}
+\end{align*}
+
+\end{document}

@@ -1,0 +1,19 @@
+Package: dgemmR
+Title: Example package for showing how to call compiled (C++, Cuda)
+    code from R
+Description: This package has various functions all performing simple matrix 
+    multiplications.
+Version: 0.1.0
+Date: 2019-02-06
+Author: Thorsten Rehberg
+Maintainer: Thorsten Rehberg <thorsten.rehberg@ur.de>
+Imports:
+Suggests:
+    testthat, knitr, rmarkdown
+Depends:
+    R (>= 3.2.0)
+License: MIT + file LICENSE
+NeedsCompilation: yes
+LazyData: yes
+RoxygenNote: 6.1.1
+VignetteBuilder: knitr

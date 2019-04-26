@@ -1,0 +1,30 @@
+CXX_STD = CXX11
+
+PKG_CXXFLAGS = $(SHLIB_OPENMP_CXXFLAGS) -DCOLUMN_MAJOR
+PKG_LIBS = $(SHLIB_OPENMP_CXXFLAGS) $(BLAS_LIBS) $(FLIBS)  ## for linking with the BLAS lib used by R
+
+### Detect normal cpp file and avx2/avx512 cpp files
+cpp_sources = $(wildcard *.cpp)
+avx2_sources = $(wildcard *avx2.cpp)
+avx512_sources = $(wildcard *avx512.cpp)
+
+### avx sources are also in cpp_sources -> filter them
+cpp_sources := $(filter-out $(avx2_sources),$(cpp_sources))
+cpp_sources := $(filter-out $(avx512_sources),$(cpp_sources))
+
+### create variables for the specific objects
+cpp_objects := $(patsubst %.cpp, %.o, $(cpp_sources))
+avx2_objects := $(patsubst %.cpp, %.o, $(avx2_sources))
+avx512_objects := $(patsubst %.cpp, %.o, $(avx512_sources))
+
+
+OBJECTS = $(cpp_objects) $(avx2_objects) $(avx512_objects)
+
+all: dgemmR.so
+dgemmR.so: $(OBJECTS)
+
+$(avx2_objects): $(avx2_sources)
+	$(CXX) $(ALL_CPPFLAGS) $(ALL_CXXFLAGS) -mavx2 -mfma -c $< -o $@
+
+$(avx512_objects): $(avx512_sources)
+	$(CXX) $(ALL_CPPFLAGS) $(ALL_CXXFLAGS) -mavx512f -c $< -o $@

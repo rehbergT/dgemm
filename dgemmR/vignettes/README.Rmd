@@ -1,0 +1,11 @@
+---
+title: "Introduction to DGEMM"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Introduction to DGEMM}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+## News:
+Example vignette. just use markdown!
+
