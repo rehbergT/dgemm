@@ -1,5 +1,5 @@
 [![Build Status](https://travis-ci.com/rehbergT/dgemm.svg?branch=master)](https://travis-ci.com/rehbergT/dgemm)
-### *This readme is still work progress. However, code and branches are complete*
+### *This readme is still work in progress. However, code and branches are complete*
 
 
 
