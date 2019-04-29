@@ -1,3 +1,8 @@
+[![Build Status](https://travis-ci.com/rehbergT/dgemm.svg?branch=master)](https://travis-ci.com/rehbergT/dgemm)
+### *This readme is still work in progress. However, code and branches are complete*
+
+
+
 # Writing R and Python Packages with Multithreaded C++ Code using BLAS, AVX2/AVX512, OpenMP, C++11 Threads and Cuda GPU acceleration
 
 This tutorial shows step-by-step how to speed-up an naive matrix multiplication which uses just three for-loops. The focus of this tutorial is to show how an existing algorithm can be ported from a R/Python to C++ using BLAS functions,
