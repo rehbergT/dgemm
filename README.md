@@ -1,11 +1,9 @@
 # Writing R and Python Packages with Multithreaded C++ Code using BLAS, AVX2/AVX512, OpenMP, C++11 Threads and Cuda GPU acceleration
 
-This tutorial shows step-by-step how to create an R or Python package
-which incorporates naive matrix multiplications functions using just three for-loops but
-each step uses more and more efficient techniques. The focus of this tutorial is to show how an existing algorithm can be ported from a R/Python to C++ using BLAS functions,
-AVX2/AVX512 vectorization (with runtime CPU feature detection), OpenMP and C++11 multithreading and CUDA. However, the functions should still be callable from within R and python using foreign function interfaces. Moreover, it is shown how to integreate unit tests for each function.
+This tutorial shows step-by-step how to speed-up an naive matrix multiplication which uses just three for-loops. The focus of this tutorial is to show how an existing algorithm can be ported from a R/Python to C++ using BLAS functions,
+AVX2/AVX512 vectorization (with runtime CPU feature detection), OpenMP and C++11 multithreading and CUDA. However, the functions should still be callable from within R and python using foreign function interfaces. Moreover, it is shown how to integrate unit tests for each function and how to utilize a CI system.
 
-**Each step of this tutorial is a separate branch** so that the changes between each step can be viewed using git diff between the branches. For example for R:
+**Each step of this tutorial is a separate branch** and the changes between each step can be viewed using git diff. For example for R:
 
     git diff step_1_R_basic_package..step_2_R_incorporating_C++
 
@@ -49,9 +47,6 @@ use/link optimized BLAS libraries.
 
 7. [**GPU Cuda:**](#head7) naive for-loop matrix multiplication in CUDA (in single and double precision) and using cuBLAS
 
-# **This readme is still work progress. However, the code/branches are already finished**
-
-
 
 ## <a name="head0"></a> **0. Installation of R/Python and BLAS Integration**
  The installation of R and Python/Numpy itself has a big influence on the performance. This section shows how to install R, Python/Numpy and how to
@@ -71,10 +66,10 @@ use/link optimized BLAS libraries.
         recommended for AMD CPUs (zen optimized [fork by AMD](https://github.com/amd/blis))
     3. [OpenBLAS](https://github.com/xianyi/OpenBLAS): open source and
     [BSD licensed](https://github.com/xianyi/OpenBLAS/blob/develop/LICENSE)
-    4. [NVBLAS](https://docs.nvidia.com/cuda/nvblas) GPU accelerated BLAS library. Note: not to be confused with [cuBLAS](https://developer.nvidia.com/cublas), which provides BLAS calls for cuda code.
+    4. [NVBLAS](https://docs.nvidia.com/cuda/nvblas) GPU accelerated BLAS library. Note: not to be confused with [cuBLAS](https://developer.nvidia.com/cublas), which provides BLAS calls for cuda (shown in step 7.) code.
     5. ...
 
-### **0.2 Linking BLAS Library with R and Python/Numpy**
+### **0.2 BLAS and R/Python/Numpy**
 * [**Anaconda**](https://www.anaconda.com/): This solution provides the Intel MKL for Python  by
     default. OpenBLAS can be installed but this might force a
     downgrade to older packages. Switching to OpenBLAS is possible by
@@ -83,7 +78,7 @@ use/link optimized BLAS libraries.
     which only uses a slower internal BLAS library.
 
 * **Ubuntu and Debian** 
-    1. **Installing BLAS**
+    1. **Installing a BLAS Library**
 
         In Ubuntu and Debian one can install an accelerated
     BLAS version from the repository and use `update-alternatives`
@@ -101,7 +96,7 @@ use/link optimized BLAS libraries.
             ```
 
             Intel provides a Debian/Ubuntu repository 
-            with updated versions, which is also available for older Ubuntu/Debian releases [(see)](https://software.intel.com/en-us/articles/installing-intel-free-libs-and-python-apt-repo). A good guide for using this repository is written by D. Eddelbuettel [here](https://github.com/eddelbuettel/mkl4deb). Note that this repository provides each version as a different package. Thus the mkl package installed in the guide with `apt-get install intel-mkl-64bit-2018.2-046` 
+            with updated versions, which is also available for older Ubuntu/Debian releases [(see)](https://software.intel.com/en-us/articles/installing-intel-free-libs-and-python-apt-repo). A good guide for using this repository is written by D. Eddelbuettel [here](https://github.com/eddelbuettel/mkl4deb). Note that this repository provides each version as a different package. Thus, the mkl package installed in the guide with `apt-get install intel-mkl-64bit-2018.2-046` 
             is outdated and one can install the current version with
             `apt-get install intel-mkl-64bit-2019.3-062`.
 
@@ -119,7 +114,7 @@ use/link optimized BLAS libraries.
     
     2. **Selecting the default BLAS**
     
-         Switching between the versions is possible using the update-alternatives mechanism.
+         Switching between the Libraries is possible using the update-alternatives mechanism.
         - Setting intel MKL default
 
             ```
