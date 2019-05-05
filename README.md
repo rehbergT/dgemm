@@ -5,7 +5,7 @@
 
 # Writing R and Python Packages with Multithreaded C++ Code using BLAS, AVX2/AVX512, OpenMP, C++11 Threads and Cuda GPU acceleration
 
-This tutorial shows step-by-step how to speed-up an naive matrix multiplication which uses just three for-loops. The focus of this tutorial is to show how an existing algorithm can be ported from a R/Python to C++ using BLAS functions,
+This tutorial shows step-by-step how to speed-up an naive matrix multiplication which uses just three for-loops. The focus of this tutorial is to show how an existing algorithm can be ported from R/Python to C++ using BLAS functions,
 AVX2/AVX512 vectorization (with runtime CPU feature detection), OpenMP and C++11 multithreading and CUDA. However, the functions should still be callable from within R and python using foreign function interfaces. Moreover, it is shown how to integrate unit tests for each function and how to utilize a CI system.
 
 **Each step of this tutorial is a separate branch** and the changes between each step can be viewed using git diff. For example for R:
