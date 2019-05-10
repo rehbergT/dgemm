@@ -5,8 +5,9 @@
 
 # Writing R and Python Packages with Multithreaded C++ Code using BLAS, AVX2/AVX512, OpenMP, C++11 Threads and Cuda GPU acceleration
 
-This tutorial shows step-by-step how to speed-up an naive matrix multiplication which uses just three for-loops. The focus of this tutorial is to show how an existing algorithm can be ported from R/Python to C++ using BLAS functions,
-AVX2/AVX512 vectorization (with runtime CPU feature detection), OpenMP and C++11 multithreading and CUDA. However, the functions should still be callable from within R and python using foreign function interfaces. Moreover, it is shown how to integrate unit tests for each function and how to utilize a CI system.
+This tutorial shows step-by-step how to create an R and Python package which performs a naive matrix multiplication which uses just three for-loops. However, at each step more and more efficient low level CPU (and GPU) features are utilized. 
+The focus of this tutorial is on showing how an existing algorithm can be ported from R or Python to C++ using BLAS functions,
+AVX2/AVX512 vectorization (with runtime CPU feature detection), OpenMP and C++11 multithreading and CUDA. It is shown how these functions can be made easily accessible from R and python using foreign function interfaces and in particular be bundled as an R or Python package in order to make your code distributable. Moreover, it is shown how unit tests for each function can be implemented and how a CI system can be utilized.
 
 **Each step of this tutorial is a separate branch** and the changes between each step can be viewed using git diff. For example for R:
 
@@ -35,10 +36,10 @@ Thirdly, your algorithm becomes portable, meaning that the same C/C++ code can b
 
 ## **Tutorial overview:**
 
-0. [**Installation of R and Python:**](#head0) The installation of R and Python/Numpy itself has a big influence on the performance. This section shows how to install R, Python/Numpy and how to
+0. [**Installation of R and Python:**](#head0) The installation of R and Python/Numpy itself affects the performance. This section shows how to install R, Python/Numpy and how to
 use/link optimized BLAS libraries.  
 
-1. [**Creating a basic R and Python package:**](#head1) The first step shows the structure of an R/Python package and provides the first two matrix multiplication functions. The first function dgemm_R_loops()/dgemm_Python_loops() uses naive for-loops while the second function dgemm_R_blas()/dgemm_Python_blas() uses built in functions, which use the linked BLAS library. Moreover, documentation, unit tests and build tools are shown.
+1. [**Creating a basic R and Python package:**](#head1) The first step shows the structure of an R/Python package and provides the first two matrix multiplication functions. The first function dgemm_R_loops()/dgemm_Python_loops() uses naive for-loops, while the second function dgemm_R_blas()/dgemm_Python_blas() uses built in functions, which are using the linked BLAS library. Moreover, documentation, unit tests and build tools are shown.
 
 2. [**Foreign Function Interfaces (FFI):**](#head2) In this section a naive matrix multiplication written in C/C++ is incorporated into the package structure using FFIs.
 
@@ -54,7 +55,7 @@ use/link optimized BLAS libraries.
 
 
 ## <a name="head0"></a> **0. Installation of R/Python and BLAS Integration**
- The installation of R and Python/Numpy itself has a big influence on the performance. This section shows how to install R, Python/Numpy and how to
+ The installation of R and Python/Numpy itself affects the performance. This section shows how to install R, Python/Numpy and how to
 use/link optimized BLAS libraries.  
 ### **0.1 Basic Linear Algebra Subprograms (BLAS)**
 * What is [BLAS](https://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms)?
@@ -71,8 +72,9 @@ use/link optimized BLAS libraries.
         recommended for AMD CPUs (zen optimized [fork by AMD](https://github.com/amd/blis))
     3. [OpenBLAS](https://github.com/xianyi/OpenBLAS): open source and
     [BSD licensed](https://github.com/xianyi/OpenBLAS/blob/develop/LICENSE)
-    4. [NVBLAS](https://docs.nvidia.com/cuda/nvblas) GPU accelerated BLAS library. Note: not to be confused with [cuBLAS](https://developer.nvidia.com/cublas), which provides BLAS calls for cuda (shown in step 7.) code.
-    5. ...
+    4. [NVBLAS:](https://docs.nvidia.com/cuda/nvblas) GPU accelerated BLAS library. Note: not to be confused with [cuBLAS](https://developer.nvidia.com/cublas).
+    5. [cuBLAS](https://developer.nvidia.com/cublas), a special BLAS library which provides BLAS functions for Cuda code (shown in step 7).
+    6. ...
 
 ### **0.2 BLAS and R/Python/Numpy**
 * [**Anaconda**](https://www.anaconda.com/): This solution provides the Intel MKL for Python  by
@@ -101,8 +103,8 @@ use/link optimized BLAS libraries.
             ```
 
             Intel provides a Debian/Ubuntu repository 
-            with updated versions, which is also available for older Ubuntu/Debian releases [(see)](https://software.intel.com/en-us/articles/installing-intel-free-libs-and-python-apt-repo). A good guide for using this repository is written by D. Eddelbuettel [here](https://github.com/eddelbuettel/mkl4deb). Note that this repository provides each version as a different package. Thus, the mkl package installed in the guide with `apt-get install intel-mkl-64bit-2018.2-046` 
-            is outdated and one can install the current version with
+            with updated versions, which is also available for older Ubuntu/Debian releases [(see)](https://software.intel.com/en-us/articles/installing-intel-free-libs-and-python-apt-repo). A good guide for using this repository is written by D. Eddelbuettel and is available [here](https://github.com/eddelbuettel/mkl4deb). Note that this repository provides each version as a different package. Thus, the mkl package installed in this guide with `apt-get install intel-mkl-64bit-2018.2-046` 
+            is outdated. One can install the current version with
             `apt-get install intel-mkl-64bit-2019.3-062`.
 
         * **BLIS:** Available in Ubuntu since 19.04 [(see)](https://launchpad.net/ubuntu/+source/blis)
@@ -129,7 +131,7 @@ use/link optimized BLAS libraries.
             update-alternatives --set liblapack.so.3-x86_64-linux-gnu  /usr/lib/x86_64-linux-gnu/libmkl_rt.so
             ```
 
-        - Setting BLIS as default. BLIS does not provide LAPACK -> use LAPACK from OpenBLAS
+        - Setting BLIS as default. BLIS does not provide LAPACK, thus one can use LAPACK from OpenBLAS
 
             ```
             update-alternatives --set libblas.so-x86_64-linux-gnu      /usr/lib/x86_64-linux-gnu/blis/libblas.so
@@ -148,10 +150,21 @@ use/link optimized BLAS libraries.
             ```
 
     3. **Installing/Upgrading R and Python**
-        * Installing R and Python from the repository:
+        * Installing R from the repository:
             ```  
-            apt install r-base r-base-dev python3 python3-dev python3-pip
+            apt install r-base r-base-dev
             ```
+
+          Installing Python from the repository:
+            ```  
+            apt install python3 python3-dev python3-pip
+            ```
+        
+          Installing R dependencies:
+            ``` 
+            Rscript -e "install.packages(c('devtools', 'testthat'))"
+            ``` 
+
           Installing Python Libraries used in this tutorial:
             ```  
             apt install python3-pip python3-numpy python3-pytest
@@ -183,7 +196,7 @@ use/link optimized BLAS libraries.
 ### **0.3. Checking the linked BLAS library** 
 * **R**
     ```
-    echo "sessionInfo(); q()" | R --vanilla
+    Rscript -e "sessionInfo()"
     > sessionInfo()
     R version 3.5.3 (2019-03-11)
     Platform: x86_64-pc-linux-gnu (64-bit)
@@ -208,7 +221,7 @@ use/link optimized BLAS libraries.
     ```
 * **Python** 
     ```
-    echo "import numpy; numpy.__config__.show()" | python
+    python -c "import numpy; numpy.__config__.show()"
     > mkl_info:
     >     libraries = ['mkl_rt', 'pthread']
     >     library_dirs = ['/home/thorsten/anaconda3/envs/py/lib']
@@ -242,7 +255,7 @@ Exercise: Install R and an accelerate BLAS library and verify that the BLAS libr
 
 ## <a name="head1"></a> **1. Creating a basic R and Python package:**
 
-The first step shows the structure of an R/Python package and provides the first two double-precision general matrix multiplication (DGEMM) functions for R and Python. The first function dgemm_R/Python_bad() uses naive for-loops while the second function dgemm_R/Python_good() uses built in functions, which use the linked BLAS library. Moreover, documentation, unit tests and build tools  are shown.
+The first step shows the structure of an R/Python package and provides the first two matrix multiplication functions. The first function dgemm_R_loops()/dgemm_Python_loops() uses naive for-loops, while the second function dgemm_R_blas()/dgemm_Python_blas() uses built in functions, which are using the linked BLAS library. Moreover, documentation, unit tests and build tools are shown.
 
 View the structure of the R package
 ```
@@ -256,7 +269,7 @@ git checkout step_1_Python_basic_package
 ### **1.1 File Structure**
 While the structure of an R package has to follow a fixed specification, a Python package can
 be arranged relatively freely. However, in order to make the R and Python package of this 
-tutorial as comparable as possible both use a similar file structure.
+tutorial as comparable as possible both use a similar folder/file structure.
 
 <center>
 <table border="0">
@@ -312,7 +325,7 @@ dgemmPy
     * R: stored in the `DESCRIPTION` file.
     * Python: stored in the `setup.py` file.
 * **Functions:**
-    * R: Stored in the `R` subfolder, exported using the `@export` roxygen annotation. 
+    * R: Stored in the `R` subfolder, exported using the `@export` roxygen2 annotation. 
     * Python: Stored in `python` subfolder, exported using the `__init__py` in the first subfolder.
 * **Unit testing:**
     * R: unit testing can be performed using the R package [testthat](https://cran.r-project.org/web/packages/testthat/index.html). Tests are stored under tests/testthat and the file name must begin with 'test_'. Testing can be performed using the R package [devtools](https://cran.r-project.org/web/packages/devtools/index.html) by opening an R session in the dgemmR folder and using:
@@ -322,7 +335,7 @@ dgemmPy
     * Python: unit tests can be performed using [pytest](https://docs.pytest.org).  
     Analogously as in R package, filenames must also begin with 'test_' and can be executed using in the subfolder dgemmPy:
         ```
-        python3 -m pytest
+        python -m pytest
         ```
 
 * **Documentation:**
@@ -338,7 +351,7 @@ dgemmPy
         pkgbuild::compile_dll() # necessary due to a devtools change
         devtools::document()
         ```
-    * Python: A Readme/Vignette has to be supplied seperate (**Fake news?**). Only a long description can be included in the setup.py file (as shown in this example). 
+    * Python: A Readme/Vignette has to be supplied seperate. Only a long description can be included in the setup.py file (as shown in this example). 
 
 * **Building Distributable Source Packages:**
     * R: open a shell in the root folder of this repository and run:
