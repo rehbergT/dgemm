@@ -191,7 +191,8 @@ use/link optimized BLAS libraries.
 
 * **macOS - Any help on this would be very appreciated, since I am not familiar with macOS!** 
 
-    Using anaconda is possible but macOS also supplies `vecLib` containing a BLAS implementation. Installing OpenBLAS, BLIS, MKL, R/Python is probably possible using brew.
+    Using anaconda is possible but macOS also supplies `vecLib` containing a BLAS implementation.
+[R MacOSX FAQ](https://cran.r-project.org/bin/macosx/RMacOSX-FAQ.html#Which-BLAS-is-used-and-how-can-it-be-changed_003f)
 
 ### **0.3. Checking the linked BLAS library** 
 * **R**
@@ -432,7 +433,7 @@ This tutorial thus uses `.Call` because the focus is a numerical applications an
 This tutorial uses the C/C++ extension approach in combination with the [NumPy C-API](https://docs.scipy.org/doc/numpy/reference/c-api.html) in order to avoid additional dependencies. Moreover, this approach is very similar to `.Call`.
 
 ### **2.2 Row-Major and Column-Major Matrix Representation**
-There a two (reasonable) ways to store a 2D array (matrix) in linear 1D memory.
+There a two common ways to store a 2D array (matrix) in linear 1D memory.
 <center>
 <img src="img/row_col_major.png" width="500"/>
 </center> 
@@ -445,16 +446,40 @@ Solution used in this tutorial: Each element can be accessed using a small funct
 Note that, despite only requiring the number-of-rows in the column-major case and vice-versa only requiring the number-of-cols in the row-major case both are supplied to the macro in order to use the same code.
 
 ## <a name="head3"></a> **3. BLAS:** 
-This sections shows how the DGEMM BLAS functions can be directly called from C and how a BLAS library can be linked during the build process of the package.
+This sections shows how the DGEMM BLAS functions can be called directly from C and how a BLAS library can be linked during the build process of the package.
+
+**Note that the BLAS interface assumes matrices to be in column-major order!**
+
+Different Levels:
+
+* Level 1: vector operations
+* Level 2: matrix-vector operations
+* Level 3: matrix-matrix operations
+
+A good overview of the different BLAS functions is available at
+[netlib](http://www.netlib.org/blas/#_level_1) and
+[here by Mark Gates](http://www.icl.utk.edu/~mgates3/docs/lapack.html)
 
 
 
 ## <a name="head4"></a> **4. AVX:** 
 Modern CPUs support vector instructions, which can hugely increase performance. In this section the naive C++ matrix multiplication is extended with AVX2/AVX512 intrinsics. Since the support of these instructions depends on the used CPU, a runtime detection and corresponding code path selection is shown.
 
+In order to be a more cache aware, matrix A is stored in row-major order while
+matrix B is stored in column-major order:
 <center>
 <img src="img/row_col_matrix_multiplication.png" width="580"/>
 </center> 
+Thereby, the elements in the rows of A and columns of B - which have to be accessed for calculating one element of C - are adjacent.
+
+One crucial aspect when using AVX intrinsics is that one has to provide fallback code
+in order to guarantee that your code can also run on CPUs which do not support the corresponding instructions. For example AVX512 is only supported on skylake-x CPUs and code compiled with AVX512 instructions will crash on normal skylake or ryzen CPUs.
+One possibility is to handle this is at compile time. However, in this tutorial AVX512 and AVX2 functions are separated in specific files and selected at runtime selected. 
+
+Note that one has to compile the code with the corresponding flags. Compiling all code with AVX flags however, will cause that also other parts of your code will be auto-vectorized and will use AVX instructions. This might cause a  crash if your CPU does not support the instruction. Thus, this tutorial shows how to adjust the build system in order to compile *avx2.cpp files with AVX2 flags and *avx512.cpp files with AVX512 flags.
+
+
+A every good tutorial about [number crunching with AVX by Matt Scarpino](https://www.codeproject.com/Articles/874396/Crunching-Numbers-with-AVX-and-AVX)
 
 ## <a name="head5"></a> **5. Multithreading with OpenMP:**
 The core count of modern CPUs is increasing more and more, especially of normal consumer CPUs. Thus, using all cores of a CPU is essential for getting the best performance. This section shows how a single line is enough to execute the AVX optimized matrix multiplication of the the previous section in parallel.

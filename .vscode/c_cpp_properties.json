@@ -11,7 +11,7 @@
             "includePath": [
                 "${workspaceFolder}",
                 "/usr/share/R/include",
-                "/usr/include/python3.6"
+                "/usr/include/python3.7"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/clang",
