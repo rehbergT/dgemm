@@ -90,6 +90,7 @@ void dgemm_C_loops_avx512(double* aligned_a,
                           int K,
                           int N,
                           int repeats);
+
 void dgemm_C_loops_avx2_omp(double* aligned_a,
                             double* aligned_b,
                             double* aligned_c,

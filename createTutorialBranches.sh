@@ -54,7 +54,7 @@ git checkout -b step_2_R_incorporating_C++
     ## clean up file content
     sed -i -e '41,134d;139,142d' dgemmR/src/wrapper.cpp
     sed -i -e '26,164d' dgemmR/src/dgemm.cpp
-    sed -i -e '4d;6d;18,47d;50,52d;61,123d' dgemmR/src/dgemm.h
+    sed -i -e '4d;6d;18,47d;50,52d;61,124d' dgemmR/src/dgemm.h
     sed -i -e "2,30d" dgemmR/src/Makevars
     echo "PKG_CXXFLAGS = -DCOLUMN_MAJOR" >> dgemmR/src/Makevars
     sed -i -e '1,20d;37,44d;48,55d;62,69d' example.R
@@ -92,7 +92,7 @@ git checkout -b step_3_R_BLAS_C++
     ## clean up file content
     sed -i -e '64,134d;140,142d' dgemmR/src/wrapper.cpp
     sed -i -e '76,164d' dgemmR/src/dgemm.cpp
-    sed -i -e '4d;6d;18,28d;50,52d;69,123d' dgemmR/src/dgemm.h
+    sed -i -e '4d;6d;18,28d;50,52d;69,124d' dgemmR/src/dgemm.h
     sed -i -e "5,30d" dgemmR/src/Makevars
     sed -i -e 's/\$(SHLIB_OPENMP_CXXFLAGS) //g' dgemmR/src/Makevars
     sed -i -e '1,20d;38,44d;49,55d;63,69d' example.R
@@ -131,7 +131,7 @@ git checkout -b step_4_R_AVX
     sed -i -e '82s/int repeats,/int repeats) {/g' dgemmR/src/dgemm.cpp
     sed -i -e '83d;136d;139,145d;147d;150,156d' dgemmR/src/dgemm.cpp
     sed -i -e '75s/int repeats,/int repeats);/g' dgemmR/src/dgemm.h
-    sed -i -e '22,28d;51,52d;76d;93,123d' dgemmR/src/dgemm.h
+    sed -i -e '22,28d;51,52d;76d;93,124d' dgemmR/src/dgemm.h
     sed -i -e '33,103d' dgemmR/src/dgemm_avx2.cpp
     sed -i -e '34,106d' dgemmR/src/dgemm_avx512.cpp
     sed -i -e 's/\$(SHLIB_OPENMP_CXXFLAGS) //g' dgemmR/src/Makevars
@@ -167,7 +167,7 @@ git checkout -b step_5_R_OpenMP
     sed -i -e '112,134d;142d' dgemmR/src/wrapper.cpp
     sed -i -e '142,144d;153,155d' dgemmR/src/dgemm.cpp
     sed -i -e '51s/, stdThreads//g' dgemmR/src/dgemm.h
-    sed -i -e '22,23d;27d;109,123d' dgemmR/src/dgemm.h
+    sed -i -e '22,23d;27d;109,124d' dgemmR/src/dgemm.h
     sed -i -e '70,103d' dgemmR/src/dgemm_avx2.cpp
     sed -i -e '73,106d' dgemmR/src/dgemm_avx512.cpp
     sed -i -e '1,20d;40,44d;51,55d;65,69d' example.R
@@ -287,7 +287,7 @@ git checkout -b step_2_Python_incorporating_C++
     ## clean up file content
     sed -i -e '56,183d;188,198d' dgemmPy/dgemmPy/src/wrapper.cpp
     sed -i -e '26,164d' dgemmPy/dgemmPy/src/dgemm.cpp
-    sed -i -e '4d;6d;18,47d;50,52d;61,123d' dgemmPy/dgemmPy/src/dgemm.h
+    sed -i -e '4d;6d;18,47d;50,52d;61,124d' dgemmPy/dgemmPy/src/dgemm.h
 
     sed -i -e '3s/import (/import dgemm_C_loops/g' dgemmPy/dgemmPy/__init__.py
     sed -i -e '8s/\"dgemm_py_loops\",/\"dgemm_py_loops\", \"dgemm_C_loops\"]/g' dgemmPy/dgemmPy/__init__.py
@@ -327,7 +327,7 @@ git checkout -b step_3_Python_BLAS_C++
     ## clean up file content
     sed -i -e '88,183d;190,198d' dgemmPy/dgemmPy/src/wrapper.cpp
     sed -i -e '76,164d' dgemmPy/dgemmPy/src/dgemm.cpp
-    sed -i -e '4d;6d;18,28d;50,52d;69,123d' dgemmPy/dgemmPy/src/dgemm.h
+    sed -i -e '4d;6d;18,28d;50,52d;69,124d' dgemmPy/dgemmPy/src/dgemm.h
 
     sed -i -e '4s/, dgemm_C_loops_avx,//g' dgemmPy/dgemmPy/__init__.py
     sed -i -e '9s/, \"dgemm_C_loops_avx\",/]/g' dgemmPy/dgemmPy/__init__.py
@@ -369,7 +369,7 @@ git checkout -b step_4_Python_AVX
     sed -i -e '82s/int repeats,/int repeats) {/g' dgemmPy/dgemmPy/src/dgemm.cpp
     sed -i -e '83d;136d;139,145d;147d;150,156d' dgemmPy/dgemmPy/src/dgemm.cpp
     sed -i -e '75s/int repeats,/int repeats);/g' dgemmPy/dgemmPy/src/dgemm.h
-    sed -i -e '22,28d;51,52d;76d;93,123d' dgemmPy/dgemmPy/src/dgemm.h
+    sed -i -e '22,28d;51,52d;76d;93,124d' dgemmPy/dgemmPy/src/dgemm.h
     sed -i -e '33,103d' dgemmPy/dgemmPy/src/dgemm_avx2.cpp
     sed -i -e '34,106d' dgemmPy/dgemmPy/src/dgemm_avx512.cpp
 
@@ -410,7 +410,7 @@ git checkout -b step_5_Python_OpenMP
 
     sed -i -e '142,144d;153,155d' dgemmPy/dgemmPy/src/dgemm.cpp
     sed -i -e '51s/, stdThreads//g' dgemmPy/dgemmPy/src/dgemm.h
-    sed -i -e '22,23d;27d;109,123d' dgemmPy/dgemmPy/src/dgemm.h
+    sed -i -e '22,23d;27d;109,124d' dgemmPy/dgemmPy/src/dgemm.h
     sed -i -e '70,103d' dgemmPy/dgemmPy/src/dgemm_avx2.cpp
     sed -i -e '73,106d' dgemmPy/dgemmPy/src/dgemm_avx512.cpp
 
