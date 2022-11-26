@@ -1,16 +1,12 @@
 CXX_STD = CXX17
 
-PKG_CXXFLAGS = $(SHLIB_OPENMP_CXXFLAGS) -DCOLUMN_MAJOR -DR_PACKAGE -pthread
-NVCC_FLAGS = -DCOLUMN_MAJOR -DR_PACKAGE -std=c++17 -x cu -Xcompiler "-fPIC" -arch=sm_61 -I$(R_INC)
-CUDA_HOME = /usr/local/cuda
-CUDA_INC = $(CUDA_HOME)/include
-PKG_LIBS = $(SHLIB_OPENMP_CXXFLAGS) $(BLAS_LIBS) $(FLIBS) -L$(CUDA_HOME)/lib64 -Wl,-rpath,$(CUDA_HOME)/lib64 -lcudart -lcublas ## for linking with the BLAS lib used by R
+PKG_CXXFLAGS = -DCOLUMN_MAJOR -DR_PACKAGE
+PKG_LIBS = $(BLAS_LIBS) $(FLIBS)  ## for linking with the BLAS lib used by R
 
 ### Detect normal cpp file, avx2/avx512 cpp files and cuda files
 cpp_sources = $(wildcard *.cpp)
 avx2_sources = $(wildcard *avx2.cpp)
 avx512_sources = $(wildcard *avx512.cpp)
-cu_sources = $(wildcard *.cu)
 
 ### avx sources are also in cpp_sources -> filter them
 cpp_sources := $(filter-out $(avx2_sources),$(cpp_sources))
@@ -20,9 +16,8 @@ cpp_sources := $(filter-out $(avx512_sources),$(cpp_sources))
 cpp_objects := $(patsubst %.cpp, %.o, $(cpp_sources))
 avx2_objects := $(patsubst %.cpp, %.o, $(avx2_sources))
 avx512_objects := $(patsubst %.cpp, %.o, $(avx512_sources))
-cu_objects := $(patsubst %.cu, %.o, $(cu_sources))
 
-OBJECTS = $(cpp_objects) $(avx2_objects) $(avx512_objects) $(cu_objects)
+OBJECTS = $(cpp_objects) $(avx2_objects) $(avx512_objects)
 
 all: dgemmR.so
 dgemmR.so: $(OBJECTS)
@@ -32,6 +27,3 @@ $(avx2_objects): $(avx2_sources)
 
 $(avx512_objects): $(avx512_sources)
 	$(CXX) $(ALL_CPPFLAGS) $(ALL_CXXFLAGS) -mavx512f -c $(filter %$*.cpp, $^) -o $@
-
-$(cu_objects): $(cu_sources)
-	nvcc $(ALL_CPPFLAGS) $(NVCC_FLAGS) -I$(CUDA_INC) -c $(filter %$*.cu, $^) -o $@

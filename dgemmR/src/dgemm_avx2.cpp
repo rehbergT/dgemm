@@ -7,9 +7,7 @@ void dgemm::dgemm_C_loops_avx2(double* matrix_a,
                                int K,
                                int N,
                                int repeats,
-                               int threads,
-                               int verbose,
-                               int parallelization) {
+                               int verbose) {
     if (verbose)
         PRINT("Using AVX2 version\n");
 
@@ -60,85 +58,23 @@ void dgemm::dgemm_C_loops_avx2(double* matrix_a,
     }
 
     for (int r = 0; r < repeats; r++) {
-        if (parallelization == 0) {
-            for (int m = 0; m < M; m++) {
-                double *_a, *_b, *_c;
-                __m256d a, b, c;
-                for (int n = 0; n < N; n++) {
-                    _a = &aligned_a[m *
-                                    memory_K];  // INDEX_ROW(m, 0, M, K) = m * K
-                    _b = &aligned_b[n *
-                                    memory_K];  // INDEX_COL(0, n, K, N) = n * K
+        for (int m = 0; m < M; m++) {
+            double *_a, *_b, *_c;
+            __m256d a, b, c;
+            for (int n = 0; n < N; n++) {
+                _a = &aligned_a[m * memory_K];  // INDEX_ROW(m, 0, M, K) = m * K
+                _b = &aligned_b[n * memory_K];  // INDEX_COL(0, n, K, N) = n * K
 
-                    c = _mm256_setzero_pd();
-                    for (int k = 0; k < memory_K; k += 4) {
-                        a = _mm256_load_pd(&_a[k]);
-                        b = _mm256_load_pd(&_b[k]);
-                        c = _mm256_fmadd_pd(a, b, c);  // c = a * b + c
-                    }
-
-                    _c = (double*)&c;
-                    result[INDEX(m, n, M, N)] = _c[0] + _c[1] + _c[2] + _c[3];
+                c = _mm256_setzero_pd();
+                for (int k = 0; k < memory_K; k += 4) {
+                    a = _mm256_load_pd(&_a[k]);
+                    b = _mm256_load_pd(&_b[k]);
+                    c = _mm256_fmadd_pd(a, b, c);  // c = a * b + c
                 }
+
+                _c = (double*)&c;
+                result[INDEX(m, n, M, N)] = _c[0] + _c[1] + _c[2] + _c[3];
             }
-        } else if (parallelization == 1) {
-            int maxThreads = omp_get_max_threads();
-            if (threads > maxThreads)
-                threads = maxThreads;
-
-            omp_set_num_threads(threads);
-            if (verbose)
-                PRINT("Using OMP with %d threads\n", threads);
-#pragma omp parallel for
-            for (int m = 0; m < M; m++) {
-                double *_a, *_b, *_c;
-                __m256d a, b, c;
-                for (int n = 0; n < N; n++) {
-                    _a = &aligned_a[m *
-                                    memory_K];  // INDEX_ROW(m, 0, M, K) = m * K
-                    _b = &aligned_b[n *
-                                    memory_K];  // INDEX_COL(0, n, K, N) = n * K
-
-                    c = _mm256_setzero_pd();
-                    for (int k = 0; k < memory_K; k += 4) {
-                        a = _mm256_load_pd(&_a[k]);
-                        b = _mm256_load_pd(&_b[k]);
-                        c = _mm256_fmadd_pd(a, b, c);  // c = a * b + c
-                    }
-
-                    _c = (double*)&c;
-                    result[INDEX(m, n, M, N)] = _c[0] + _c[1] + _c[2] + _c[3];
-                }
-            }
-        } else if (parallelization == 2) {
-            int maxThreads = std::thread::hardware_concurrency();
-            if (threads > maxThreads)
-                threads = maxThreads;
-
-            if (verbose)
-                PRINT("Using my thread pool with %d threads\n", threads);
-
-            Parallel par(maxThreads);
-            par.doParallelChunked(M, [&](size_t m) {
-                double *_a, *_b, *_c;
-                __m256d a, b, c;
-                for (int n = 0; n < N; n++) {
-                    _a = &aligned_a[m *
-                                    memory_K];  // INDEX_ROW(m, 0, M, K) = m * K
-                    _b = &aligned_b[n *
-                                    memory_K];  // INDEX_COL(0, n, K, N) = n * K
-
-                    c = _mm256_setzero_pd();
-                    for (int k = 0; k < memory_K; k += 4) {
-                        a = _mm256_load_pd(&_a[k]);
-                        b = _mm256_load_pd(&_b[k]);
-                        c = _mm256_fmadd_pd(a, b, c);  // c = a * b + c
-                    }
-
-                    _c = (double*)&c;
-                    result[INDEX(m, n, M, N)] = _c[0] + _c[1] + _c[2] + _c[3];
-                }
-            });
         }
     }
     _mm_free(aligned_a);

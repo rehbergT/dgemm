@@ -2,11 +2,9 @@
 #define DGEMM_H
 
 #include <immintrin.h>  // used for AVX instrinsics
-#include <omp.h>
-#include <cstdio>   // for printf
-#include <cstdlib>  // for size_t type
-#include <cstring>  // used for memset
-#include "Parallel.h"
+#include <cstdio>       // for printf
+#include <cstdlib>      // for size_t type
+#include <cstring>      // used for memset
 
 #ifdef R_PACKAGE
 #include <R.h>
@@ -53,15 +51,7 @@ enum dgemm_algo {
     loops = 2,
     blas = 3,
     avx2 = 4,
-    avx2_omp = 5,
-    avx2_tp = 6,
-    avx512 = 7,
-    avx512_omp = 8,
-    avx512_tp = 9,
-    cuda_cublas_s = 10,
-    cuda_cublas_d = 11,
-    cuda_loops_s = 12,
-    cuda_loops_d = 13
+    avx512 = 5
 };
 
 void dgemm_C(double* matrix_a,
@@ -72,7 +62,6 @@ void dgemm_C(double* matrix_a,
              int N,
              int repeats,
              int algo,
-             int threads,
              int verbose);
 
 void dgemm_C_loops(double* matrix_a,
@@ -109,9 +98,7 @@ void dgemm_C_loops_avx2(double* aligned_a,
                         int K,
                         int N,
                         int repeats,
-                        int threads,
-                        int verbose,
-                        int parallelization);
+                        int verbose);
 
 void dgemm_C_loops_avx512(double* aligned_a,
                           double* aligned_b,
@@ -120,47 +107,7 @@ void dgemm_C_loops_avx512(double* aligned_a,
                           int K,
                           int N,
                           int repeats,
-                          int threads,
-                          int verbose,
-                          int parallelization);
-
-int check_cuda_support(int verbose);
-
-void sgemm_cuda_loops(double* matrix_a,
-                      double* matrix_b,
-                      double* result,
-                      int M,
-                      int K,
-                      int N,
-                      int repeats,
-                      int verbose);
-
-void dgemm_cuda_loops(double* matrix_a,
-                      double* matrix_b,
-                      double* result,
-                      int M,
-                      int K,
-                      int N,
-                      int repeats,
-                      int verbose);
-
-void sgemm_cuda_cublas(double* matrix_a,
-                       double* matrix_b,
-                       double* result,
-                       int M,
-                       int K,
-                       int N,
-                       int repeats,
-                       int verbose);
-
-void dgemm_cuda_cublas(double* matrix_a,
-                       double* matrix_b,
-                       double* result,
-                       int M,
-                       int K,
-                       int N,
-                       int repeats,
-                       int verbose);
+                          int verbose);
 }  // namespace dgemm
 
 #endif

@@ -100,7 +100,6 @@ void dgemm::dgemm_C(double* matrix_a,
                     int N,
                     int repeats,
                     int algo,
-                    int threads,
                     int verbose) {
     if (algo == automatic) {
         if (verbose)
@@ -112,9 +111,6 @@ void dgemm::dgemm_C(double* matrix_a,
 
         if (__builtin_cpu_supports("avx512f"))
             algo = avx512;
-
-        if (check_cuda_support(verbose))
-            algo = cuda_cublas_d;
     }
 
     switch (algo) {
@@ -127,47 +123,11 @@ void dgemm::dgemm_C(double* matrix_a,
             break;
         case avx2:
             dgemm_C_loops_avx2(matrix_a, matrix_b, result, M, K, N, repeats,
-                               threads, verbose, 0);
-            break;
-        case avx2_omp:
-            dgemm_C_loops_avx2(matrix_a, matrix_b, result, M, K, N, repeats,
-                               threads, verbose, 1);
-            break;
-        case avx2_tp:
-            dgemm_C_loops_avx2(matrix_a, matrix_b, result, M, K, N, repeats,
-                               threads, verbose, 2);
+                               verbose);
             break;
         case avx512:
             dgemm_C_loops_avx512(matrix_a, matrix_b, result, M, K, N, repeats,
-                                 threads, verbose, 0);
-            break;
-        case avx512_omp:
-            dgemm_C_loops_avx512(matrix_a, matrix_b, result, M, K, N, repeats,
-                                 threads, verbose, 1);
-            break;
-        case avx512_tp:
-            dgemm_C_loops_avx512(matrix_a, matrix_b, result, M, K, N, repeats,
-                                 threads, verbose, 2);
-            break;
-        case cuda_cublas_s:
-            sgemm_cuda_cublas(matrix_a, matrix_b, result, M, K, N, repeats,
-                              verbose);
-            break;
-        case cuda_cublas_d:
-            dgemm_cuda_cublas(matrix_a, matrix_b, result, M, K, N, repeats,
-                              verbose);
-            break;
-        case cuda_loops_s:
-            sgemm_cuda_loops(matrix_a, matrix_b, result, M, K, N, repeats,
-                             verbose);
-            break;
-        case cuda_loops_d:
-            dgemm_cuda_loops(matrix_a, matrix_b, result, M, K, N, repeats,
-                             verbose);
-            break;
-        case fallback:
-            dgemm_C_fallback(matrix_a, matrix_b, result, M, K, N, repeats,
-                             verbose);
+                                 verbose);
             break;
         default:
             dgemm_C_fallback(matrix_a, matrix_b, result, M, K, N, repeats,
