@@ -12,8 +12,7 @@ from dgemmPy.python.dgemm_py_loops import dgemm_py_loops
 def dgemm(matrix_a: np.array, matrix_b: np.array,
           repeats: int = 1,
           algo: str = "py_blas",
-          verbose: bool = False,
-          threads: int = 8):
+          verbose: bool = False):
     """Matrix multiplication using different implementations
 
     This function takes two matrices a and b and performs a times b and
@@ -26,53 +25,27 @@ def dgemm(matrix_a: np.array, matrix_b: np.array,
         repeats: determines how often the matrix multiplcation is repeated
         algo: select algo
         verbose: enable output
-        threads: select number of threads
 
     Returns:
         returns the matrixproduct of a and b
     """
     algo_int = 0
-    if algo == "automatic":
+    if algo == "loops":
         algo_int = 0
-    elif algo == "fallback":
-        algo_int = 1
-    elif algo == "loops":
-        algo_int = 2
     elif algo == "blas":
-        algo_int = 3
-    elif algo == "avx2":
-        algo_int = 4
-    elif algo == "avx2_omp":
-        algo_int = 5
-    elif algo == "avx2_tp":
-        algo_int = 6
-    elif algo == "avx512":
-        algo_int = 7
-    elif algo == "avx512_omp":
-        algo_int = 8
-    elif algo == "avx512_tp":
-        algo_int = 9
-    elif algo == "cuda_cublas_s":
-        algo_int = 10
-    elif algo == "cuda_cublas_d":
-        algo_int = 11
-    elif algo == "cuda_loops_s":
-        algo_int = 12
-    elif algo == "cuda_loops_d":
-        algo_int = 13
+        algo_int = 1
     elif algo == "py_loops":
-        algo_int = 14
+        algo_int = 2
     elif algo == "py_blas":
-        algo_int = 15
+        algo_int = 3
     else:
         algo_int = 1
 
-    if algo_int == 14:
+    if algo_int == 2:
         result = dgemm_py_loops(matrix_a, matrix_b, repeats, verbose)
-    elif algo_int == 15:
+    elif algo_int == 3:
         result = dgemm_py_blas(matrix_a, matrix_b, repeats, verbose)
     else:
-        result = dgemm_C(matrix_a, matrix_b, repeats,
-                         algo_int, verbose, threads)
+        result = dgemm_C(matrix_a, matrix_b, repeats, algo_int, verbose)
 
     return result
