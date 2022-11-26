@@ -4,14 +4,7 @@
 \alias{dgemm}
 \title{Description of the dgemm_C function}
 \usage{
-dgemm(
-  matrix_a,
-  matrix_b,
-  repeats = 1,
-  algo = "blas",
-  verbose = FALSE,
-  threads = 8
-)
+dgemm(matrix_a, matrix_b, repeats = 1, algo = "r_blas", verbose = FALSE)
 }
 \arguments{
 \item{matrix_a}{matrix a}
@@ -23,8 +16,6 @@ dgemm(
 \item{algo}{select algo.}
 
 \item{verbose}{enable output.}
-
-\item{threads}{select number of threads}
 }
 \value{
 returns the matrixproduct of a and b

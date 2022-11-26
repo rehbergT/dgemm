@@ -13,7 +13,6 @@ Suggests:
 Depends:
     R (>= 3.2.0)
 License: MIT + file LICENSE
-NeedsCompilation: yes
 LazyData: yes
 RoxygenNote: 7.2.2
 VignetteBuilder: knitr
