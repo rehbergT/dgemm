@@ -7,7 +7,7 @@ import numpy as np
 
 
 def dgemm_py_blas(matrix_a: np.array, matrix_b: np.array,
-                  repeats: int = 1):
+                  repeats: int = 1, verbose: bool = False):
     """Good matrix multiplication using the buildin numpy function
 
     This function takes two matrices a and b and performs a times b and
@@ -17,11 +17,16 @@ def dgemm_py_blas(matrix_a: np.array, matrix_b: np.array,
     Args:
         matrix_a: matrix a
         matrix_b: matrix b
-        repeats: determines how often the matrix multiplcation is repeated.
+        repeats: determines how often the matrix multiplcation is repeated
+        verbose: enable output
 
     Returns:
         returns the matrixproduct of a and b
     """
+
+    if verbose:
+        print("Python Blas Version")
+
     result = np.empty((matrix_a.shape[0], matrix_b.shape[1]))
     for r in range(repeats):
         result = np.matmul(matrix_a, matrix_b)

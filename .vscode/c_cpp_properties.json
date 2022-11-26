@@ -11,7 +11,10 @@
             "includePath": [
                 "${workspaceFolder}",
                 "/usr/share/R/include",
-                "/usr/include/python3.7"
+                "/usr/include/python3.10",
+                "/usr/local/cuda/include",
+                "${workspaceFolder}/dgemmR/src",
+                "${workspaceFolder}/dgemmPy/dgemmPy/src"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/clang",

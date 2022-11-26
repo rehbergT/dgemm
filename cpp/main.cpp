@@ -1,10 +1,9 @@
 #include <cstdio>
 #include <random>
 
-#include "dgemm.h"
+#include "../dgemmR/src/dgemm.h"
 
 void printMatrix(double* x, size_t N, size_t M) {
-    return;
     for (size_t i = 0; i < N; i++) {
         for (size_t j = 0; j < M; j++) {
             printf("%+.6e ", x[INDEX(i, j, N, M)]);
@@ -22,11 +21,14 @@ double sum(double* x, size_t N) {
 }
 
 int main() {
-    size_t M = 4000;
-    size_t N = 5000;
+    printf("Hello from the pure C++ version!\n");
+    size_t M = 400;
+    size_t N = 500;
     size_t K = 520;
     size_t repeats = 10;
-    size_t global_repeats = 20;
+    size_t global_repeats = 1;
+    int verbose = 0;
+    int threads = 32;
 
     double* a = (double*)malloc(M * K * sizeof(double));
     double* b = (double*)malloc(K * N * sizeof(double));
@@ -47,112 +49,173 @@ int main() {
     clock_gettime(CLOCK_REALTIME, &ts0);
 
     for (size_t i = 0; i < global_repeats; i++)
-        dgemm::dgemm_C_blas(a, b, c, M, K, N, repeats);
+        dgemm::dgemm_C(a, b, c, M, K, N, repeats, dgemm::dgemm_algo::blas,
+                       threads, verbose);
 
     clock_gettime(CLOCK_REALTIME, &ts1);
     timet = (ts1.tv_sec - ts0.tv_sec) + (ts1.tv_nsec - ts0.tv_nsec) * 1e-9;
     printf("C blas:          %f ms \t checksum: %e\n",
            timet * 1e3 / global_repeats, sum(c, M * N));
-    printMatrix(c, M, N);
+    // printMatrix(c, M, N);
     memset(c, 0.0, M * N * sizeof(double));
 
     clock_gettime(CLOCK_REALTIME, &ts0);
 
     for (size_t i = 0; i < global_repeats; i++)
-        dgemm::dgemm_C_loops(a, b, c, M, K, N, repeats);
+        dgemm::dgemm_C(a, b, c, M, K, N, repeats, dgemm::dgemm_algo::loops,
+                       threads, verbose);
 
     clock_gettime(CLOCK_REALTIME, &ts1);
     timet = (ts1.tv_sec - ts0.tv_sec) + (ts1.tv_nsec - ts0.tv_nsec) * 1e-9;
     printf("C loops:         %f ms \t checksum: %e\n",
            timet * 1e3 / global_repeats, sum(c, M * N));
-    printMatrix(c, M, N);
+    // printMatrix(c, M, N);
     memset(c, 0.0, M * N * sizeof(double));
 
     clock_gettime(CLOCK_REALTIME, &ts0);
 
     for (size_t i = 0; i < global_repeats; i++)
-        dgemm::dgemm_C_loops_avx(a, b, c, M, K, N, repeats,
-                                 dgemm::mtTypes::none);
+        dgemm::dgemm_C(a, b, c, M, K, N, repeats, dgemm::dgemm_algo::avx2,
+                       threads, verbose);
 
     clock_gettime(CLOCK_REALTIME, &ts1);
     timet = (ts1.tv_sec - ts0.tv_sec) + (ts1.tv_nsec - ts0.tv_nsec) * 1e-9;
-    printf("C loops_avx:     %f ms \t checksum: %e\n",
+    printf("C avx2:          %f ms \t checksum: %e\n",
            timet * 1e3 / global_repeats, sum(c, M * N));
-    printMatrix(c, M, N);
+    // printMatrix(c, M, N);
     memset(c, 0.0, M * N * sizeof(double));
 
     clock_gettime(CLOCK_REALTIME, &ts0);
 
     for (size_t i = 0; i < global_repeats; i++)
-        dgemm::dgemm_C_loops_avx(a, b, c, M, K, N, repeats,
-                                 dgemm::mtTypes::openmp);
+        dgemm::dgemm_C(a, b, c, M, K, N, repeats, dgemm::dgemm_algo::avx2_omp,
+                       threads, verbose);
 
     clock_gettime(CLOCK_REALTIME, &ts1);
     timet = (ts1.tv_sec - ts0.tv_sec) + (ts1.tv_nsec - ts0.tv_nsec) * 1e-9;
-    printf("C loops_avx_omp: %f ms \t checksum: %e\n",
+    printf("C avx2 omp:      %f ms \t checksum: %e\n",
            timet * 1e3 / global_repeats, sum(c, M * N));
-    printMatrix(c, M, N);
+    // printMatrix(c, M, N);
     memset(c, 0.0, M * N * sizeof(double));
 
     clock_gettime(CLOCK_REALTIME, &ts0);
 
     for (size_t i = 0; i < global_repeats; i++)
-        dgemm::dgemm_C_loops_avx(a, b, c, M, K, N, repeats,
-                                 dgemm::mtTypes::stdThreads);
+        dgemm::dgemm_C(a, b, c, M, K, N, repeats, dgemm::dgemm_algo::avx2_tp,
+                       threads, verbose);
 
     clock_gettime(CLOCK_REALTIME, &ts1);
     timet = (ts1.tv_sec - ts0.tv_sec) + (ts1.tv_nsec - ts0.tv_nsec) * 1e-9;
-    printf("C loops_avx_pt:  %f ms \t checksum: %e\n",
+    printf("C avx2 tp:       %f ms \t checksum: %e\n",
            timet * 1e3 / global_repeats, sum(c, M * N));
-    printMatrix(c, M, N);
+    // printMatrix(c, M, N);
     memset(c, 0.0, M * N * sizeof(double));
 
     clock_gettime(CLOCK_REALTIME, &ts0);
 
     for (size_t i = 0; i < global_repeats; i++)
-        dgemm::sgemm_cuda_loops(a, b, c, M, K, N, repeats);
+        dgemm::dgemm_C(a, b, c, M, K, N, repeats, dgemm::dgemm_algo::avx512,
+                       threads, verbose);
 
     clock_gettime(CLOCK_REALTIME, &ts1);
     timet = (ts1.tv_sec - ts0.tv_sec) + (ts1.tv_nsec - ts0.tv_nsec) * 1e-9;
-    printf("Cuda loops_sp:   %f ms \t checksum: %e\n",
+    printf("C avx512:        %f ms \t checksum: %e\n",
            timet * 1e3 / global_repeats, sum(c, M * N));
-    printMatrix(c, M, N);
+    // printMatrix(c, M, N);
     memset(c, 0.0, M * N * sizeof(double));
 
     clock_gettime(CLOCK_REALTIME, &ts0);
 
     for (size_t i = 0; i < global_repeats; i++)
-        dgemm::dgemm_cuda_loops(a, b, c, M, K, N, repeats);
+        dgemm::dgemm_C(a, b, c, M, K, N, repeats, dgemm::dgemm_algo::avx512_omp,
+                       threads, verbose);
 
     clock_gettime(CLOCK_REALTIME, &ts1);
     timet = (ts1.tv_sec - ts0.tv_sec) + (ts1.tv_nsec - ts0.tv_nsec) * 1e-9;
-    printf("Cuda loops_dp:   %f ms \t checksum: %e\n",
+    printf("C avx512_omp:    %f ms \t checksum: %e\n",
            timet * 1e3 / global_repeats, sum(c, M * N));
-    printMatrix(c, M, N);
-    memset(c, 0.0, M * N * sizeof(double));
-    clock_gettime(CLOCK_REALTIME, &ts0);
-
-    for (size_t i = 0; i < global_repeats; i++)
-        dgemm::sgemm_cuda_cublas(a, b, c, M, K, N, repeats);
-
-    clock_gettime(CLOCK_REALTIME, &ts1);
-    timet = (ts1.tv_sec - ts0.tv_sec) + (ts1.tv_nsec - ts0.tv_nsec) * 1e-9;
-    printf("Cuda blas_sp:    %f ms \t checksum: %e\n",
-           timet * 1e3 / global_repeats, sum(c, M * N));
-    printMatrix(c, M, N);
+    // printMatrix(c, M, N);
     memset(c, 0.0, M * N * sizeof(double));
 
     clock_gettime(CLOCK_REALTIME, &ts0);
 
     for (size_t i = 0; i < global_repeats; i++)
-        dgemm::dgemm_cuda_cublas(a, b, c, M, K, N, repeats);
+        dgemm::dgemm_C(a, b, c, M, K, N, repeats, dgemm::dgemm_algo::avx512_tp,
+                       threads, verbose);
 
     clock_gettime(CLOCK_REALTIME, &ts1);
     timet = (ts1.tv_sec - ts0.tv_sec) + (ts1.tv_nsec - ts0.tv_nsec) * 1e-9;
-    printf("Cuda blas_dp:    %f ms \t checksum: %e\n",
+    printf("C avx512_tp:     %f ms \t checksum: %e\n",
            timet * 1e3 / global_repeats, sum(c, M * N));
+    // printMatrix(c, M, N);
+    memset(c, 0.0, M * N * sizeof(double));
 
-    printMatrix(c, M, N);
+    clock_gettime(CLOCK_REALTIME, &ts0);
+
+    for (size_t i = 0; i < global_repeats; i++)
+        dgemm::dgemm_C(a, b, c, M, K, N, repeats,
+                       dgemm::dgemm_algo::cuda_cublas_s, threads, verbose);
+
+    clock_gettime(CLOCK_REALTIME, &ts1);
+    timet = (ts1.tv_sec - ts0.tv_sec) + (ts1.tv_nsec - ts0.tv_nsec) * 1e-9;
+    printf("Cuda sp cublas:  %f ms \t checksum: %e\n",
+           timet * 1e3 / global_repeats, sum(c, M * N));
+    // printMatrix(c, M, N);
+    memset(c, 0.0, M * N * sizeof(double));
+
+    clock_gettime(CLOCK_REALTIME, &ts0);
+
+    for (size_t i = 0; i < global_repeats; i++)
+        dgemm::dgemm_C(a, b, c, M, K, N, repeats,
+                       dgemm::dgemm_algo::cuda_cublas_s, threads, verbose);
+
+    clock_gettime(CLOCK_REALTIME, &ts1);
+    timet = (ts1.tv_sec - ts0.tv_sec) + (ts1.tv_nsec - ts0.tv_nsec) * 1e-9;
+    printf("Cuda sp cublas:  %f ms \t checksum: %e\n",
+           timet * 1e3 / global_repeats, sum(c, M * N));
+    // printMatrix(c, M, N);
+    memset(c, 0.0, M * N * sizeof(double));
+
+    clock_gettime(CLOCK_REALTIME, &ts0);
+
+    for (size_t i = 0; i < global_repeats; i++)
+        dgemm::dgemm_C(a, b, c, M, K, N, repeats,
+                       dgemm::dgemm_algo::cuda_cublas_d, threads, verbose);
+
+    clock_gettime(CLOCK_REALTIME, &ts1);
+    timet = (ts1.tv_sec - ts0.tv_sec) + (ts1.tv_nsec - ts0.tv_nsec) * 1e-9;
+    printf("Cuda dp cublas:  %f ms \t checksum: %e\n",
+           timet * 1e3 / global_repeats, sum(c, M * N));
+    // printMatrix(c, M, N);
+    memset(c, 0.0, M * N * sizeof(double));
+
+    clock_gettime(CLOCK_REALTIME, &ts0);
+
+    for (size_t i = 0; i < global_repeats; i++)
+        dgemm::dgemm_C(a, b, c, M, K, N, repeats,
+                       dgemm::dgemm_algo::cuda_loops_s, threads, verbose);
+
+    clock_gettime(CLOCK_REALTIME, &ts1);
+    timet = (ts1.tv_sec - ts0.tv_sec) + (ts1.tv_nsec - ts0.tv_nsec) * 1e-9;
+    printf("Cuda sp loops:   %f ms \t checksum: %e\n",
+           timet * 1e3 / global_repeats, sum(c, M * N));
+    // printMatrix(c, M, N);
+    memset(c, 0.0, M * N * sizeof(double));
+    clock_gettime(CLOCK_REALTIME, &ts0);
+
+    clock_gettime(CLOCK_REALTIME, &ts0);
+
+    for (size_t i = 0; i < global_repeats; i++)
+        dgemm::dgemm_C(a, b, c, M, K, N, repeats,
+                       dgemm::dgemm_algo::cuda_loops_d, threads, verbose);
+
+    clock_gettime(CLOCK_REALTIME, &ts1);
+    timet = (ts1.tv_sec - ts0.tv_sec) + (ts1.tv_nsec - ts0.tv_nsec) * 1e-9;
+    printf("Cuda loops sp:   %f ms \t checksum: %e\n",
+           timet * 1e3 / global_repeats, sum(c, M * N));
+    // printMatrix(c, M, N);
+    memset(c, 0.0, M * N * sizeof(double));
+
     free(a);
     free(b);
     free(c);

@@ -4,12 +4,15 @@
 #include <numpy/arrayobject.h>
 #include "dgemm.h"
 
-static PyArrayObject* dgemm_C_loops(PyObject* self, PyObject* args) {
+static PyArrayObject* dgemm_wrapper(PyObject* self, PyObject* args) {
     PyArrayObject* _matrix_a = nullptr;
     PyArrayObject* _matrix_b = nullptr;
 
     // default repeats should be 1
     int repeats = 1;
+    int algo = 1;
+    int verbose = 1;
+    int threads = 1;
 
     // see https://docs.python.org/3/c-api/arg.html
     // first O! = first argument (a numpy array object)
@@ -21,8 +24,9 @@ static PyArrayObject* dgemm_C_loops(PyObject* self, PyObject* args) {
     //         provided the int is not changed
     // : ends the argument string
     // the string after : is used as name in exceptions
-    if (!PyArg_ParseTuple(args, "O!O!|i:dgemm_C_loops", &PyArray_Type,
-                          &_matrix_a, &PyArray_Type, &_matrix_b, &repeats)) {
+    if (!PyArg_ParseTuple(args, "O!O!iiii:dgemm_C", &PyArray_Type,
+                          &_matrix_a, &PyArray_Type, &_matrix_b,
+                          &repeats, &algo, &verbose, &threads)) {
         return 0;
     }
 
@@ -47,155 +51,16 @@ static PyArrayObject* dgemm_C_loops(PyObject* self, PyObject* args) {
     PyArrayObject* res = (PyArrayObject*)PyArray_ZEROS(2, dims, NPY_DOUBLE, 0);
     double* res_ptr = (double*)PyArray_DATA(res);
     NPY_BEGIN_ALLOW_THREADS
-    dgemm::dgemm_C_loops(matrix_a, matrix_b, res_ptr, M, K, N, repeats);
+    dgemm::dgemm_C(matrix_a, matrix_b, res_ptr, M, K, N, repeats, algo, threads, verbose);
     NPY_END_ALLOW_THREADS
 
     return res;
 }
 
-static PyArrayObject* dgemm_C_blas(PyObject* self, PyObject* args) {
-    PyArrayObject* _matrix_a = nullptr;
-    PyArrayObject* _matrix_b = nullptr;
-    int repeats = 1;
-    if (!PyArg_ParseTuple(args, "O!O!|i:dgemm_C_blas", &PyArray_Type,
-                          &_matrix_a, &PyArray_Type, &_matrix_b, &repeats)) {
-        return 0;
-    }
-
-    double* matrix_a = (double*)PyArray_DATA(_matrix_a);
-    double* matrix_b = (double*)PyArray_DATA(_matrix_b);
-
-    npy_intp* dims_a = PyArray_DIMS(_matrix_a);
-    npy_intp* dims_b = PyArray_DIMS(_matrix_b);
-
-    int M = (int)dims_a[0];
-    int N = (int)dims_b[1];
-    int K = (int)dims_a[1];
-
-    npy_intp nRows = M;
-    npy_intp nCols = N;
-    npy_intp dims[2] = {nRows, nCols};
-    PyArrayObject* res = (PyArrayObject*)PyArray_ZEROS(2, dims, NPY_DOUBLE, 0);
-    double* res_ptr = (double*)PyArray_DATA(res);
-
-    NPY_BEGIN_ALLOW_THREADS
-    dgemm::dgemm_C_blas(matrix_a, matrix_b, res_ptr, M, K, N, repeats);
-    NPY_END_ALLOW_THREADS
-
-    return res;
-}
-
-static PyArrayObject* dgemm_C_loops_avx(PyObject* self, PyObject* args) {
-    PyArrayObject* _matrix_a = nullptr;
-    PyArrayObject* _matrix_b = nullptr;
-    int repeats = 1;
-    if (!PyArg_ParseTuple(args, "O!O!|i:dgemm_C_loops", &PyArray_Type,
-                          &_matrix_a, &PyArray_Type, &_matrix_b, &repeats)) {
-        return 0;
-    }
-
-    double* matrix_a = (double*)PyArray_DATA(_matrix_a);
-    double* matrix_b = (double*)PyArray_DATA(_matrix_b);
-
-    npy_intp* dims_a = PyArray_DIMS(_matrix_a);
-    npy_intp* dims_b = PyArray_DIMS(_matrix_b);
-
-    int M = (int)dims_a[0];
-    int N = (int)dims_b[1];
-    int K = (int)dims_a[1];
-
-    npy_intp nRows = M;
-    npy_intp nCols = N;
-    npy_intp dims[2] = {nRows, nCols};
-    PyArrayObject* res = (PyArrayObject*)PyArray_ZEROS(2, dims, NPY_DOUBLE, 0);
-    double* res_ptr = (double*)PyArray_DATA(res);
-    NPY_BEGIN_ALLOW_THREADS
-    dgemm::dgemm_C_loops_avx(matrix_a, matrix_b, res_ptr, M, K, N, repeats,
-                             dgemm::mtTypes::none);
-    NPY_END_ALLOW_THREADS
-
-    return res;
-}
-static PyArrayObject* dgemm_C_loops_avx_omp(PyObject* self, PyObject* args) {
-    PyArrayObject* _matrix_a = nullptr;
-    PyArrayObject* _matrix_b = nullptr;
-    int repeats = 1;
-    if (!PyArg_ParseTuple(args, "O!O!|i:dgemm_C_loops", &PyArray_Type,
-                          &_matrix_a, &PyArray_Type, &_matrix_b, &repeats)) {
-        return 0;
-    }
-
-    double* matrix_a = (double*)PyArray_DATA(_matrix_a);
-    double* matrix_b = (double*)PyArray_DATA(_matrix_b);
-
-    npy_intp* dims_a = PyArray_DIMS(_matrix_a);
-    npy_intp* dims_b = PyArray_DIMS(_matrix_b);
-
-    int M = (int)dims_a[0];
-    int N = (int)dims_b[1];
-    int K = (int)dims_a[1];
-
-    npy_intp nRows = M;
-    npy_intp nCols = N;
-    npy_intp dims[2] = {nRows, nCols};
-    PyArrayObject* res = (PyArrayObject*)PyArray_ZEROS(2, dims, NPY_DOUBLE, 0);
-    double* res_ptr = (double*)PyArray_DATA(res);
-
-    NPY_BEGIN_ALLOW_THREADS
-    dgemm::dgemm_C_loops_avx(matrix_a, matrix_b, res_ptr, M, K, N, repeats,
-                             dgemm::mtTypes::openmp);
-    NPY_END_ALLOW_THREADS
-
-    return res;
-}
-
-static PyArrayObject* dgemm_C_loops_avx_tp(PyObject* self, PyObject* args) {
-    PyArrayObject* _matrix_a = nullptr;
-    PyArrayObject* _matrix_b = nullptr;
-    int repeats = 1;
-    if (!PyArg_ParseTuple(args, "O!O!|i:dgemm_C_loops", &PyArray_Type,
-                          &_matrix_a, &PyArray_Type, &_matrix_b, &repeats)) {
-        return 0;
-    }
-
-    double* matrix_a = (double*)PyArray_DATA(_matrix_a);
-    double* matrix_b = (double*)PyArray_DATA(_matrix_b);
-
-    npy_intp* dims_a = PyArray_DIMS(_matrix_a);
-    npy_intp* dims_b = PyArray_DIMS(_matrix_b);
-
-    int M = (int)dims_a[0];
-    int N = (int)dims_b[1];
-    int K = (int)dims_a[1];
-
-    npy_intp nRows = M;
-    npy_intp nCols = N;
-    npy_intp dims[2] = {nRows, nCols};
-    PyArrayObject* res = (PyArrayObject*)PyArray_ZEROS(2, dims, NPY_DOUBLE, 0);
-    double* res_ptr = (double*)PyArray_DATA(res);
-
-    NPY_BEGIN_ALLOW_THREADS
-    dgemm::dgemm_C_loops_avx(matrix_a, matrix_b, res_ptr, M, K, N, repeats,
-                             dgemm::mtTypes::stdThreads);
-    NPY_END_ALLOW_THREADS
-
-    return res;
-}
 
 static PyMethodDef methods[] = {
-    {"dgemm_C_loops", (PyCFunction)dgemm_C_loops, METH_VARARGS,
+    {"dgemm_C", (PyCFunction)dgemm_wrapper, METH_VARARGS,
      "A function that performs a matrix multiplication using naive loops."},
-    {"dgemm_C_blas", (PyCFunction)dgemm_C_blas, METH_VARARGS,
-     "A function that performs a matrix multiplication using BLAS."},
-    {"dgemm_C_loops_avx", (PyCFunction)dgemm_C_loops_avx, METH_VARARGS,
-     "A function that performs a matrix multiplication using naive loops using "
-     "avx instructions."},
-    {"dgemm_C_loops_avx_omp", (PyCFunction)dgemm_C_loops_avx_omp, METH_VARARGS,
-     "A function that performs a matrix multiplication using naive loops using "
-     "avx instructions and openmp parallelization."},
-    {"dgemm_C_loops_avx_tp", (PyCFunction)dgemm_C_loops_avx_tp, METH_VARARGS,
-     "A function that performs a matrix multiplication using naive loops using "
-     "avx instructions and a threadpool parallelization."},
     {NULL, NULL, 0, NULL} /* Sentinel */
 };
 

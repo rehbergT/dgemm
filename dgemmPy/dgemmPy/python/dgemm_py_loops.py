@@ -7,7 +7,7 @@ import numpy as np
 
 
 def dgemm_py_loops(matrix_a: np.array, matrix_b: np.array,
-                   repeats: int = 1):
+                   repeats: int = 1, verbose: bool = False):
     """Bad matrix multiplication using naive for loops
 
     This function takes two matrices a and b and performs a times b and
@@ -17,11 +17,16 @@ def dgemm_py_loops(matrix_a: np.array, matrix_b: np.array,
     Args:
         matrix_a: matrix a
         matrix_b: matrix b
-        repeats: determines how often the matrix multiplcation is repeated.
+        repeats: determines how often the matrix multiplcation is repeated
+        verbose: enable output
 
     Returns:
         returns the matrixproduct of a and b
     """
+
+    if verbose:
+        print("Python Loop Version")
+
     M = matrix_a.shape[0]
     N = matrix_b.shape[1]
     K = matrix_a.shape[1]

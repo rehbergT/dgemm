@@ -1,5 +1,6 @@
 *.o
 *~
+.pytest_cache
 *.gch
 *.so
 *.a

@@ -1,13 +1,27 @@
 #include <cublas_v2.h>
 #include "dgemm.h"
 
+#ifdef DEBUG
 void catchCudaError(const char* file, int line) {
     cudaError_t e = cudaGetLastError();
     if (e != cudaSuccess) {
-        printf("Cuda-Error: %s %s %d\n", cudaGetErrorString(e), file, line);
+        PRINT("Cuda-Error: %s %s %d\n", cudaGetErrorString(e), file, line);
         cudaDeviceReset();
         exit(0);
     }
+}
+#endif
+
+int dgemm::check_cuda_support(int verbose) {
+    int num_gpus = 0;
+    cudaError_t err = cudaGetDeviceCount(&num_gpus);
+    if (err != cudaSuccess) {
+        if (verbose)
+            PRINT(
+                "CUDA: No GPU available. Defaulting to CPU only computation\n");
+        return false;
+    }
+    return true;
 }
 
 __global__ void cuda_sgemm(float* matrix_a,
@@ -54,7 +68,16 @@ void dgemm::sgemm_cuda_loops(double* matrix_a,
                              int M,
                              int K,
                              int N,
-                             int repeats) {
+                             int repeats,
+                             int verbose) {
+    if (verbose)
+        PRINT("Using sp cuda kernel version\n");
+
+    if (!check_cuda_support(verbose)) {
+        dgemm_C_fallback(matrix_a, matrix_b, result, M, K, N, repeats, verbose);
+        return;
+    }
+
     size_t sizeA = M * K;
     size_t sizeB = K * N;
     size_t sizeC = M * N;
@@ -77,7 +100,10 @@ void dgemm::sgemm_cuda_loops(double* matrix_a,
 
     cudaMemcpy(d_a, a, sizeA * sizeof(float), cudaMemcpyHostToDevice);
     cudaMemcpy(d_b, b, sizeB * sizeof(float), cudaMemcpyHostToDevice);
+
+#ifdef DEBUG
     catchCudaError(__FILE__, __LINE__);
+#endif
 
     size_t block_size = 16;
     size_t grid_rows = ceil((double)M / block_size);
@@ -89,7 +115,9 @@ void dgemm::sgemm_cuda_loops(double* matrix_a,
     for (int r = 0; r < repeats; r++)
         cuda_sgemm<<<dimGrid, dimBlock>>>(d_a, d_b, d_c, M, K, N);
 
+#ifdef DEBUG
     catchCudaError(__FILE__, __LINE__);
+#endif
 
     // copy results back
     cudaMemcpy(c, d_c, sizeC * sizeof(float), cudaMemcpyDeviceToHost);
@@ -101,7 +129,9 @@ void dgemm::sgemm_cuda_loops(double* matrix_a,
 
     // Wait for GPU to finish before accessing on host
     cudaDeviceSynchronize();
+#ifdef DEBUG
     catchCudaError(__FILE__, __LINE__);
+#endif
 
     for (size_t i = 0; i < sizeC; i++)
         result[i] = (double)c[i];
@@ -116,7 +146,16 @@ void dgemm::dgemm_cuda_loops(double* matrix_a,
                              int M,
                              int K,
                              int N,
-                             int repeats) {
+                             int repeats,
+                             int verbose) {
+    if (verbose)
+        PRINT("Using dp cuda kernel version\n");
+
+    if (!check_cuda_support(verbose)) {
+        dgemm_C_fallback(matrix_a, matrix_b, result, M, K, N, repeats, verbose);
+        return;
+    }
+
     size_t sizeA = M * K;
     size_t sizeB = K * N;
     size_t sizeC = M * N;
@@ -129,7 +168,9 @@ void dgemm::dgemm_cuda_loops(double* matrix_a,
 
     cudaMemcpy(d_a, matrix_a, sizeA * sizeof(double), cudaMemcpyHostToDevice);
     cudaMemcpy(d_b, matrix_b, sizeB * sizeof(double), cudaMemcpyHostToDevice);
+#ifdef DEBUG
     catchCudaError(__FILE__, __LINE__);
+#endif
 
     size_t block_size = 16;
     size_t grid_rows = ceil((double)M / block_size);
@@ -141,7 +182,9 @@ void dgemm::dgemm_cuda_loops(double* matrix_a,
     for (int r = 0; r < repeats; r++)
         cuda_dgemm<<<dimGrid, dimBlock>>>(d_a, d_b, d_c, M, K, N);
 
+#ifdef DEBUG
     catchCudaError(__FILE__, __LINE__);
+#endif
 
     // copy results back
     cudaMemcpy(result, d_c, sizeC * sizeof(double), cudaMemcpyDeviceToHost);
@@ -153,7 +196,9 @@ void dgemm::dgemm_cuda_loops(double* matrix_a,
 
     // Wait for GPU to finish before accessing on host
     cudaDeviceSynchronize();
+#ifdef DEBUG
     catchCudaError(__FILE__, __LINE__);
+#endif
 }
 
 void dgemm::sgemm_cuda_cublas(double* matrix_a,
@@ -162,7 +207,15 @@ void dgemm::sgemm_cuda_cublas(double* matrix_a,
                               int M,
                               int K,
                               int N,
-                              int repeats) {
+                              int repeats,
+                              int verbose) {
+    if (verbose)
+        PRINT("Using sp cublas version\n");
+
+    if (!check_cuda_support(verbose)) {
+        dgemm_C_fallback(matrix_a, matrix_b, result, M, K, N, repeats, verbose);
+        return;
+    }
     size_t sizeA = M * K;
     size_t sizeB = K * N;
     size_t sizeC = M * N;
@@ -185,7 +238,9 @@ void dgemm::sgemm_cuda_cublas(double* matrix_a,
 
     cudaMemcpy(d_a, a, sizeA * sizeof(float), cudaMemcpyHostToDevice);
     cudaMemcpy(d_b, b, sizeB * sizeof(float), cudaMemcpyHostToDevice);
+#ifdef DEBUG
     catchCudaError(__FILE__, __LINE__);
+#endif
 
     size_t block_size = 16;
     size_t grid_rows = ceil((double)M / block_size);
@@ -216,7 +271,9 @@ void dgemm::sgemm_cuda_cublas(double* matrix_a,
     // Destroy the handle
     cublasDestroy(handle);
 
+#ifdef DEBUG
     catchCudaError(__FILE__, __LINE__);
+#endif
 
     // copy results back
     cudaMemcpy(c, d_c, sizeC * sizeof(float), cudaMemcpyDeviceToHost);
@@ -228,7 +285,9 @@ void dgemm::sgemm_cuda_cublas(double* matrix_a,
 
     // Wait for GPU to finish before accessing on host
     cudaDeviceSynchronize();
+#ifdef DEBUG
     catchCudaError(__FILE__, __LINE__);
+#endif
 
     for (size_t i = 0; i < sizeC; i++)
         result[i] = (double)c[i];
@@ -243,7 +302,16 @@ void dgemm::dgemm_cuda_cublas(double* matrix_a,
                               int M,
                               int K,
                               int N,
-                              int repeats) {
+                              int repeats,
+                              int verbose) {
+    if (verbose)
+        PRINT("Using dp cublas version\n");
+
+    if (!check_cuda_support(verbose)) {
+        dgemm_C_fallback(matrix_a, matrix_b, result, M, K, N, repeats, verbose);
+        return;
+    }
+
     size_t sizeA = M * K;
     size_t sizeB = K * N;
     size_t sizeC = M * N;
@@ -256,7 +324,9 @@ void dgemm::dgemm_cuda_cublas(double* matrix_a,
 
     cudaMemcpy(d_a, matrix_a, sizeA * sizeof(double), cudaMemcpyHostToDevice);
     cudaMemcpy(d_b, matrix_b, sizeB * sizeof(double), cudaMemcpyHostToDevice);
+#ifdef DEBUG
     catchCudaError(__FILE__, __LINE__);
+#endif
 
     size_t block_size = 16;
     size_t grid_rows = ceil((double)M / block_size);
@@ -287,7 +357,9 @@ void dgemm::dgemm_cuda_cublas(double* matrix_a,
     // Destroy the handle
     cublasDestroy(handle);
 
+#ifdef DEBUG
     catchCudaError(__FILE__, __LINE__);
+#endif
 
     // copy results back
     cudaMemcpy(result, d_c, sizeC * sizeof(double), cudaMemcpyDeviceToHost);
@@ -299,5 +371,7 @@ void dgemm::dgemm_cuda_cublas(double* matrix_a,
 
     // Wait for GPU to finish before accessing on host
     cudaDeviceSynchronize();
+#ifdef DEBUG
     catchCudaError(__FILE__, __LINE__);
+#endif
 }

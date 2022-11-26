@@ -1,58 +1,21 @@
 {
-    "files.associations": {
-        "*.rmd": "markdown",
-        "array": "cpp",
-        "atomic": "cpp",
-        "*.tcc": "cpp",
-        "cctype": "cpp",
-        "chrono": "cpp",
-        "clocale": "cpp",
-        "cmath": "cpp",
-        "condition_variable": "cpp",
-        "cstdarg": "cpp",
-        "cstddef": "cpp",
-        "cstdint": "cpp",
-        "cstdio": "cpp",
-        "cstdlib": "cpp",
-        "cstring": "cpp",
-        "ctime": "cpp",
-        "cwchar": "cpp",
-        "cwctype": "cpp",
-        "deque": "cpp",
-        "unordered_map": "cpp",
-        "vector": "cpp",
-        "exception": "cpp",
-        "fstream": "cpp",
-        "functional": "cpp",
-        "future": "cpp",
-        "initializer_list": "cpp",
-        "iosfwd": "cpp",
-        "iostream": "cpp",
-        "istream": "cpp",
-        "limits": "cpp",
-        "memory": "cpp",
-        "mutex": "cpp",
-        "new": "cpp",
-        "optional": "cpp",
-        "ostream": "cpp",
-        "ratio": "cpp",
-        "sstream": "cpp",
-        "stdexcept": "cpp",
-        "streambuf": "cpp",
-        "string_view": "cpp",
-        "system_error": "cpp",
-        "thread": "cpp",
-        "cinttypes": "cpp",
-        "type_traits": "cpp",
-        "tuple": "cpp",
-        "typeinfo": "cpp",
-        "utility": "cpp",
-        "queue": "cpp",
-        "numeric": "cpp",
-        "algorithm": "cpp"
-    },
-    "python.linting.pylintEnabled": false,
-    "python.linting.flake8Enabled": true,
+    "python.autoComplete.extraPaths": [
+        "./dataloader"
+    ],
+    "python.linting.pylintEnabled": true,
+    "python.linting.flake8Enabled": false,
     "python.linting.enabled": true,
-    "python.pythonPath": "/usr/bin/python3"
+    "python.jediEnabled": false,
+    "cSpell.words": [
+        "inplace",
+        "isin"
+    ],
+    "python.languageServer": "Pylance",
+    "python.analysis.extraPaths": [
+        "./dataloader"
+    ],
+    "files.associations": {
+        "random": "cpp",
+        "cmath": "cpp"
+    }
 }

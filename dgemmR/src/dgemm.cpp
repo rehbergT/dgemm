@@ -6,7 +6,10 @@ void dgemm::dgemm_C_loops(double* matrix_a,
                           int M,
                           int K,
                           int N,
-                          int repeats) {
+                          int repeats,
+                          int verbose) {
+    if (verbose)
+        PRINT("Using C-loops version\n");
     double sum;
 
     for (int r = 0; r < repeats; r++) {
@@ -23,13 +26,29 @@ void dgemm::dgemm_C_loops(double* matrix_a,
     }
 }
 
+void dgemm::dgemm_C_fallback(double* matrix_a,
+                             double* matrix_b,
+                             double* result,
+                             int M,
+                             int K,
+                             int N,
+                             int repeats,
+                             int verbose) {
+    if (verbose)
+        PRINT("Fallback version\n");
+    dgemm_C_blas(matrix_a, matrix_b, result, M, K, N, repeats, verbose);
+}
+
 void dgemm::dgemm_C_blas(double* matrix_a,
                          double* matrix_b,
                          double* result,
                          int M,
                          int K,
                          int N,
-                         int repeats) {
+                         int repeats,
+                         int verbose) {
+    if (verbose)
+        PRINT("Using BLAS version\n");
     char transpose = 'N';
     double one = 1.0;
     double zero = 0.0;
@@ -73,91 +92,85 @@ void dgemm::dgemm_C_blas(double* matrix_a,
     }
 }
 
-void dgemm::dgemm_C_loops_avx(double* matrix_a,
-                              double* matrix_b,
-                              double* result,
-                              int M,
-                              int K,
-                              int N,
-                              int repeats,
-                              int parallelization) {
-    int alignedDoubles, alignment, avxType;
+void dgemm::dgemm_C(double* matrix_a,
+                    double* matrix_b,
+                    double* result,
+                    int M,
+                    int K,
+                    int N,
+                    int repeats,
+                    int algo,
+                    int threads,
+                    int verbose) {
+    if (algo == automatic) {
+        if (verbose)
+            PRINT("Automatic Detection\n");
 
-    // check which avx type is supported by the cpu
-    if (__builtin_cpu_supports("avx2")) {
-        avxType = avx2;
-        alignedDoubles = 4;
-        alignment = 32;
-    } else if (__builtin_cpu_supports("avx512f")) {
-        avxType = avx512;
-        alignedDoubles = 8;
-        alignment = 64;
-    } else {
-        avxType = fallback;
-        dgemm_C_loops(matrix_a, matrix_b, result, M, K, N, repeats);
-        return;
+        algo = fallback;
+        if (__builtin_cpu_supports("avx2"))
+            algo = avx2;
+
+        if (__builtin_cpu_supports("avx512f"))
+            algo = avx512;
+
+        if (check_cuda_support(verbose))
+            algo = cuda_cublas_d;
     }
 
-    // the following deep copies the matrices because:
-    // 1. max. cache utilization: A stored in row-major order,
-    //                            B stored in col-major order
-    // 2. avx instruction rely on aligned memory = the memory address of the
-    //    first element of each col (col-major order) or. row (row-major order)
-    //    must be a multiple of alignedDoubles -> add zero-padding
-    int memory_K = K;
-    if (memory_K % alignedDoubles != 0)
-        memory_K += alignedDoubles - memory_K % alignedDoubles;
-
-    double* aligned_a =
-        (double*)ALIGNED_ALLOC(alignment, M * memory_K * sizeof(double));
-    double* aligned_b =
-        (double*)ALIGNED_ALLOC(alignment, memory_K * N * sizeof(double));
-
-    memset(aligned_a, 0.0, M * memory_K * sizeof(double));
-    memset(aligned_b, 0.0, memory_K * N * sizeof(double));
-
-    // pay attention to the order of the loops!
-    for (int m = 0; m < M; m++) {
-        for (int k = 0; k < K; k++) {
-            aligned_a[INDEX_ROW(m, k, M, memory_K)] =
-                matrix_a[INDEX(m, k, M, K)];
-        }
+    switch (algo) {
+        case loops:
+            dgemm_C_loops(matrix_a, matrix_b, result, M, K, N, repeats,
+                          verbose);
+            break;
+        case blas:
+            dgemm_C_blas(matrix_a, matrix_b, result, M, K, N, repeats, verbose);
+            break;
+        case avx2:
+            dgemm_C_loops_avx2(matrix_a, matrix_b, result, M, K, N, repeats,
+                               threads, verbose, 0);
+            break;
+        case avx2_omp:
+            dgemm_C_loops_avx2(matrix_a, matrix_b, result, M, K, N, repeats,
+                               threads, verbose, 1);
+            break;
+        case avx2_tp:
+            dgemm_C_loops_avx2(matrix_a, matrix_b, result, M, K, N, repeats,
+                               threads, verbose, 2);
+            break;
+        case avx512:
+            dgemm_C_loops_avx512(matrix_a, matrix_b, result, M, K, N, repeats,
+                                 threads, verbose, 0);
+            break;
+        case avx512_omp:
+            dgemm_C_loops_avx512(matrix_a, matrix_b, result, M, K, N, repeats,
+                                 threads, verbose, 1);
+            break;
+        case avx512_tp:
+            dgemm_C_loops_avx512(matrix_a, matrix_b, result, M, K, N, repeats,
+                                 threads, verbose, 2);
+            break;
+        case cuda_cublas_s:
+            sgemm_cuda_cublas(matrix_a, matrix_b, result, M, K, N, repeats,
+                              verbose);
+            break;
+        case cuda_cublas_d:
+            dgemm_cuda_cublas(matrix_a, matrix_b, result, M, K, N, repeats,
+                              verbose);
+            break;
+        case cuda_loops_s:
+            sgemm_cuda_loops(matrix_a, matrix_b, result, M, K, N, repeats,
+                             verbose);
+            break;
+        case cuda_loops_d:
+            dgemm_cuda_loops(matrix_a, matrix_b, result, M, K, N, repeats,
+                             verbose);
+            break;
+        case fallback:
+            dgemm_C_fallback(matrix_a, matrix_b, result, M, K, N, repeats,
+                             verbose);
+            break;
+        default:
+            dgemm_C_fallback(matrix_a, matrix_b, result, M, K, N, repeats,
+                             verbose);
     }
-
-    // pay attention to the order of the loops!
-    for (int n = 0; n < N; n++) {
-        for (int k = 0; k < K; k++) {
-            aligned_b[INDEX_COL(k, n, memory_K, N)] =
-                matrix_b[INDEX(k, n, K, N)];
-        }
-    }
-
-    if (avxType == avx2) {
-        if (parallelization == none) {
-            dgemm_C_loops_avx2(aligned_a, aligned_b, result, M, memory_K, N,
-                               repeats);
-        } else if (parallelization == openmp) {
-            dgemm_C_loops_avx2_omp(aligned_a, aligned_b, result, M, memory_K, N,
-                                   repeats);
-        } else {
-            dgemm_C_loops_avx2_tp(aligned_a, aligned_b, result, M, memory_K, N,
-                                  repeats);
-        }
-    } else if (avxType == avx512) {
-        if (parallelization == none) {
-            dgemm_C_loops_avx512(aligned_a, aligned_b, result, M, memory_K, N,
-                                 repeats);
-        } else if (parallelization == openmp) {
-            dgemm_C_loops_avx512_omp(aligned_a, aligned_b, result, M, memory_K,
-                                     N, repeats);
-        } else {
-            dgemm_C_loops_avx512_tp(aligned_a, aligned_b, result, M, memory_K,
-                                    N, repeats);
-        }
-    } else {
-        // should never happen due to the return above!
-    }
-
-    ALIGNED_FREE(aligned_a);
-    ALIGNED_FREE(aligned_b);
 }

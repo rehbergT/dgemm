@@ -1,21 +1,15 @@
 # init folder with " cmake . " and build with "make" or "make VERBOSE=1" for 
 # more build details
-# rm -rf build; mkdir build; cd build; cmake -DCMAKE_BUILD_TYPE=Release .. ; make VERBOSE=1; ./dgemm; cd ..;
+# rm -rf build; mkdir build; cd build; cmake -DCMAKE_CUDA_ARCHITECTURES=50 -DCMAKE_BUILD_TYPE=Release .. ; make VERBOSE=1; ./dgemm; cd ..;
 cmake_minimum_required(VERSION 3.10)
-project(dgemm CXX)
+project(dgemm CXX CUDA)
 
-## compile time cuda check
-include(CheckLanguage)
-check_language(CUDA)
-if(CMAKE_CUDA_COMPILER)
-  enable_language(CUDA)
-else()
-  message(STATUS "No CUDA compiler found")
-endif()
+enable_language(CUDA)
 
 
-## set C++11 as standard
-set (CMAKE_CXX_STANDARD 11)
+
+## set C++17 as standard
+set (CMAKE_CXX_STANDARD 17)
 
 ## check for link time optimization (LTO, INTERPROCEDURAL_OPTIMIZATION)
 include(CheckIPOSupported)
@@ -38,27 +32,16 @@ endif()
 ################################################################################
 ##                 definition of the dgemmlib as static lib                   ##
 ################################################################################
-find_package(CUDA 5.0)
-if (CUDA_FOUND)
-    if(NOT DEFINED CMAKE_CUDA_STANDARD)
-        set(CMAKE_CUDA_STANDARD 11)
-        set(CMAKE_CUDA_STANDARD_REQUIRED ON)
-    endif()
-
-    add_library(dgemmlib STATIC dgemm.cpp dgemm_avx2.cpp dgemm_avx512.cpp dgemm_cuda.cu)
-
-    # set(CUDA_SEPARABLE_COMPILATION ON)
-    # set(CUDA_PROPAGATE_HOST_FLAGS OFF)
-    # set_target_properties(dgemmlib PROPERTIES
-    #         POSITION_INDEPENDENT_CODE ON
-    #         CUDA_SPARABLE_COMPILATION ON)
-
-    LIST(APPEND CUDA_NVCC_FLAGS "--gpu-architecture=compute_50")
-
-    target_link_libraries(dgemmlib -lcublas)
-else()
-    add_library(dgemmlib STATIC dgemm.cpp dgemm_avx2.cpp dgemm_avx512.cpp dgemm_cuda.cpp)
+if(NOT DEFINED CMAKE_CUDA_STANDARD)
+    set(CMAKE_CUDA_STANDARD 17)
+    set(CMAKE_CUDA_STANDARD_REQUIRED ON)
 endif()
+
+add_library(dgemmlib STATIC ../dgemmR/src/dgemm.cpp ../dgemmR/src/dgemm_avx2.cpp ../dgemmR/src/dgemm_avx512.cpp ../dgemmR/src/dgemm_cuda.cu)
+
+
+
+target_link_libraries(dgemmlib -lcublas)
 
 
 
@@ -89,13 +72,13 @@ if (lto_supported)
 endif()
 
 if (MSVC)
-    set_source_files_properties(dgemm_avx2.cpp PROPERTIES COMPILE_FLAGS /arch:AVX2)
-    set_source_files_properties(dgemm_avx2.cpp PROPERTIES COMPILE_FLAGS -mfma)
-    set_source_files_properties(dgemm_avx512.cpp PROPERTIES COMPILE_FLAGS /arch:AVX512)
+    set_source_files_properties(../dgemmR/src/dgemm_avx2.cpp PROPERTIES COMPILE_FLAGS /arch:AVX2)
+    set_source_files_properties(../dgemmR/src/dgemm_avx2.cpp PROPERTIES COMPILE_FLAGS -mfma)
+    set_source_files_properties(../dgemmR/src/dgemm_avx512.cpp PROPERTIES COMPILE_FLAGS /arch:AVX512)
 else()
-    set_source_files_properties(dgemm_avx2.cpp PROPERTIES COMPILE_FLAGS -mavx2)
-    set_source_files_properties(dgemm_avx2.cpp PROPERTIES COMPILE_FLAGS -mfma)
-    set_source_files_properties(dgemm_avx512.cpp PROPERTIES COMPILE_FLAGS -mavx512f)
+    set_source_files_properties(../dgemmR/src/dgemm_avx2.cpp PROPERTIES COMPILE_FLAGS -mavx2)
+    set_source_files_properties(../dgemmR/src/dgemm_avx2.cpp PROPERTIES COMPILE_FLAGS -mfma)
+    set_source_files_properties(../dgemmR/src/dgemm_avx512.cpp PROPERTIES COMPILE_FLAGS -mavx512f)
 endif()
 
 set(BLA_VENDOR Generic)

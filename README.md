@@ -1,7 +1,4 @@
-[![Build Status](https://travis-ci.com/rehbergT/dgemm.svg?branch=master)](https://travis-ci.com/rehbergT/dgemm)
-### *This readme is still work in progress. However, code and branches are complete*
-
-
+[![R-Package Build Status](https://github.com/rehbergt/dgemm_test/workflows/R-CMD-check/badge.svg)](https://github.com/rehbergt/dgemm_test/actions) [![Python-Package Build Status](https://github.com/rehbergt/dgemm_test/workflows/pytest/badge.svg)](https://github.com/rehbergt/dgemm_test/actions)
 
 # Writing R and Python Packages with Multithreaded C++ Code using BLAS, AVX2/AVX512, OpenMP, C++11 Threads and Cuda GPU acceleration
 
@@ -29,7 +26,7 @@ Distributing your machine-learning method/algorithm as R and/or Python package e
 
 Firstly, compiled code ensures a much better performance and secondly grants you access
 to low level CPU features, which even further improve performance.
-Thirdly, your algorithm becomes portable, meaning that the same C/C++ code can be incorporated in an R and Python package or even be used directly, which is also shown in the cpp folder using CMAKE.
+Thirdly, your algorithm becomes portable, meaning that the same C/C++ code can be incorporated in an R and Python package or even be used directly, which is also shown in the cpp folder using CMAKE and make.
 
 **Comments, Hints and Improvement are appreciated, just create an issue or pull request!**
 
