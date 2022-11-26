@@ -31,12 +31,9 @@ SEXP dgemm_wrapper(SEXP r_list) {
     double* result = REAL(_result);
 
     int repeats = INTEGER(getElementFromRList(r_list, "repeats"))[0];
-    int algo = INTEGER(getElementFromRList(r_list, "algo"))[0];
     int verbose = INTEGER(getElementFromRList(r_list, "verbose"))[0];
-    int threads = INTEGER(getElementFromRList(r_list, "threads"))[0];
 
-    dgemm::dgemm_C(matrix_a, matrix_b, result, M, K, N, repeats, algo, threads,
-                   verbose);
+    dgemm::dgemm_C_loops(matrix_a, matrix_b, result, M, K, N, repeats, verbose);
 
     UNPROTECT(1);
     return _result;
