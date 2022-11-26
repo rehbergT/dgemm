@@ -1,23 +1,3 @@
-# call roxygen2 to create the manuals from the comments above the functions
-#        pkgbuild::compile_dll(); devtools::document()
-#
-# run devtools tests:
-#        devtools::check(document = FALSE)
-#
-# run unit tests:
-#        devtools::test()
-#
-# run lintr
-#        lintr::lint_package()
-#
-# build vignette using devtools
-#        devtools::build_vignettes()
-#
-# open a terminal, go to this folder and call the R build command:
-#        R CMD build dgemmR
-#
-# verify the package:
-#        R CMD check dgemmR_0.1.0.tar.gz
 rm(list = ls())
 library(microbenchmark)
 devtools::clean_dll("dgemmR")
