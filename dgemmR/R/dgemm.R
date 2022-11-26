@@ -33,32 +33,20 @@ dgemm <- function(matrix_a, matrix_b, repeats = 1, algo = "blas", verbose = FALS
         algo_int <- 4
     } else if (algo == "avx2_omp") {
         algo_int <- 5
-    } else if (algo == "avx2_tp") {
-        algo_int <- 6
     } else if (algo == "avx512") {
-        algo_int <- 7
+        algo_int <- 6
     } else if (algo == "avx512_omp") {
-        algo_int <- 8
-    } else if (algo == "avx512_tp") {
-        algo_int <- 9
-    } else if (algo == "cuda_cublas_s") {
-        algo_int <- 10
-    } else if (algo == "cuda_cublas_d") {
-        algo_int <- 11
-    } else if (algo == "cuda_loops_s") {
-        algo_int <- 12
-    } else if (algo == "cuda_loops_d") {
-        algo_int <- 13
+        algo_int <- 7
     } else if (algo == "r_loops") {
-        algo_int <- 14
+        algo_int <- 8
     } else if (algo == "r_blas") {
-        algo_int <- 15
+        algo_int <- 9
     } else {
         algo_int <- 1
     }
 
 
-    if (algo_int < 14) {
+    if (algo_int < 8) {
         to_C <- list()
         to_C$matrix_a <- matrix_a
         to_C$matrix_b <- matrix_b
@@ -68,7 +56,7 @@ dgemm <- function(matrix_a, matrix_b, repeats = 1, algo = "blas", verbose = FALS
         to_C$threads <- as.integer(threads)
 
         result <- .Call("_dgemm_C", to_C, PACKAGE = "dgemmR")
-    } else if (algo_int == 14) {
+    } else if (algo_int == 8) {
         if (verbose) print("Using R-loops")
         M <- nrow(matrix_a)
         N <- ncol(matrix_b)
