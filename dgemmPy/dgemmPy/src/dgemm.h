@@ -58,10 +58,6 @@ enum dgemm_algo {
     avx512 = 7,
     avx512_omp = 8,
     avx512_tp = 9,
-    cuda_cublas_s = 10,
-    cuda_cublas_d = 11,
-    cuda_loops_s = 12,
-    cuda_loops_d = 13
 };
 
 void dgemm_C(double* matrix_a,
@@ -123,44 +119,6 @@ void dgemm_C_loops_avx512(double* aligned_a,
                           int threads,
                           int verbose,
                           int parallelization);
-
-int check_cuda_support(int verbose);
-
-void sgemm_cuda_loops(double* matrix_a,
-                      double* matrix_b,
-                      double* result,
-                      int M,
-                      int K,
-                      int N,
-                      int repeats,
-                      int verbose);
-
-void dgemm_cuda_loops(double* matrix_a,
-                      double* matrix_b,
-                      double* result,
-                      int M,
-                      int K,
-                      int N,
-                      int repeats,
-                      int verbose);
-
-void sgemm_cuda_cublas(double* matrix_a,
-                       double* matrix_b,
-                       double* result,
-                       int M,
-                       int K,
-                       int N,
-                       int repeats,
-                       int verbose);
-
-void dgemm_cuda_cublas(double* matrix_a,
-                       double* matrix_b,
-                       double* result,
-                       int M,
-                       int K,
-                       int N,
-                       int repeats,
-                       int verbose);
 }  // namespace dgemm
 
 #endif

@@ -27,8 +27,4 @@ def test_equality_1():
     assert equality(N, M, K, "avx512") == pytest.approx(0.0, abs=1e-10)
     assert equality(N, M, K, "avx512_omp") == pytest.approx(0.0, abs=1e-10)
     assert equality(N, M, K, "avx512_tp") == pytest.approx(0.0, abs=1e-10)
-    assert equality(N, M, K, "cuda_cublas_s") == pytest.approx(0.0, abs=1e-1)
-    assert equality(N, M, K, "cuda_cublas_d") == pytest.approx(0.0, abs=1e-10)
-    assert equality(N, M, K, "cuda_loops_s") == pytest.approx(0.0, abs=1e-1)
-    assert equality(N, M, K, "cuda_loops_d") == pytest.approx(0.0, abs=1e-10)
     assert equality(N, M, K, "py_loops") == pytest.approx(0.0, abs=1e-10)

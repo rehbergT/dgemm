@@ -52,24 +52,16 @@ def dgemm(matrix_a: np.array, matrix_b: np.array,
         algo_int = 8
     elif algo == "avx512_tp":
         algo_int = 9
-    elif algo == "cuda_cublas_s":
-        algo_int = 10
-    elif algo == "cuda_cublas_d":
-        algo_int = 11
-    elif algo == "cuda_loops_s":
-        algo_int = 12
-    elif algo == "cuda_loops_d":
-        algo_int = 13
     elif algo == "py_loops":
-        algo_int = 14
+        algo_int = 10
     elif algo == "py_blas":
-        algo_int = 15
+        algo_int = 11
     else:
         algo_int = 1
 
-    if algo_int == 14:
+    if algo_int == 10:
         result = dgemm_py_loops(matrix_a, matrix_b, repeats, verbose)
-    elif algo_int == 15:
+    elif algo_int == 11:
         result = dgemm_py_blas(matrix_a, matrix_b, repeats, verbose)
     else:
         result = dgemm_C(matrix_a, matrix_b, repeats,
