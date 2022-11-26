@@ -24,9 +24,9 @@ static PyArrayObject* dgemm_wrapper(PyObject* self, PyObject* args) {
     //         provided the int is not changed
     // : ends the argument string
     // the string after : is used as name in exceptions
-    if (!PyArg_ParseTuple(args, "O!O!iiii:dgemm_C", &PyArray_Type,
-                          &_matrix_a, &PyArray_Type, &_matrix_b,
-                          &repeats, &algo, &verbose, &threads)) {
+    if (!PyArg_ParseTuple(args, "O!O!iiii:dgemm_C", &PyArray_Type, &_matrix_a,
+                          &PyArray_Type, &_matrix_b, &repeats, &algo, &verbose,
+                          &threads)) {
         return 0;
     }
 
@@ -51,12 +51,12 @@ static PyArrayObject* dgemm_wrapper(PyObject* self, PyObject* args) {
     PyArrayObject* res = (PyArrayObject*)PyArray_ZEROS(2, dims, NPY_DOUBLE, 0);
     double* res_ptr = (double*)PyArray_DATA(res);
     NPY_BEGIN_ALLOW_THREADS
-    dgemm::dgemm_C(matrix_a, matrix_b, res_ptr, M, K, N, repeats, algo, threads, verbose);
+    dgemm::dgemm_C(matrix_a, matrix_b, res_ptr, M, K, N, repeats, algo, threads,
+                   verbose);
     NPY_END_ALLOW_THREADS
 
     return res;
 }
-
 
 static PyMethodDef methods[] = {
     {"dgemm_C", (PyCFunction)dgemm_wrapper, METH_VARARGS,

@@ -43,12 +43,12 @@ class build_ext_subclass(build_ext):
 
 module = Extension('dgemmPy.src',
                    sources=['dgemmPy/src/wrapper.cpp',
-                            '../dgemmR/src/dgemm.cpp',
-                            '../dgemmR/src/dgemm_avx2.cpp',
-                            '../dgemmR/src/dgemm_avx512.cpp',
-                            '../dgemmR/src/dgemm_cuda.cu'
+                            'dgemmPy/src/dgemm.cpp',
+                            'dgemmPy/src/dgemm_avx2.cpp',
+                            'dgemmPy/src/dgemm_avx512.cpp',
+                            'dgemmPy/src/dgemm_cuda.cu'
                             ],
-                   include_dirs=['../dgemmR/src',
+                   include_dirs=['dgemmPy/src',
                                  numpy.get_include(),
                                  path.join(CUDA_HOME, 'include')],
                    library_dirs=[path.join(CUDA_HOME, 'lib64')],
