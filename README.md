@@ -1,4 +1,4 @@
-[![R-Package Build Status](https://github.com/rehbergt/dgemm_test/workflows/R-CMD-check/badge.svg)](https://github.com/rehbergt/dgemm_test/actions) [![Python-Package Build Status](https://github.com/rehbergt/dgemm_test/workflows/pytest/badge.svg)](https://github.com/rehbergt/dgemm_test/actions)
+[![R-Package Build Status](https://github.com/rehbergt/dgemm/workflows/R-CMD-check/badge.svg)](https://github.com/rehbergt/dgemm/actions) [![Python-Package Build Status](https://github.com/rehbergt/dgemm/workflows/pytest/badge.svg)](https://github.com/rehbergt/dgemm/actions)
 
 # Writing R and Python Packages with Multithreaded C++ Code using BLAS, AVX2/AVX512, OpenMP, C++11 Threads and Cuda GPU acceleration
 
